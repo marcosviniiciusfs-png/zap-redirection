@@ -152,6 +152,7 @@
     .btn.danger:hover { background: rgba(164, 60, 47, 0.08); }
 
     .error { min-height: 22px; margin-top: 12px; color: var(--danger); font-size: 0.9rem; font-weight: 700; }
+    .status-line { min-height: 22px; margin-top: 12px; color: var(--green-dark); font-size: 0.9rem; font-weight: 700; }
     .groups { display: grid; gap: 14px; }
     .empty { padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 8px; }
 
@@ -256,7 +257,7 @@
     <div class="grid">
       <div class="forms">
         <form class="panel" id="groupForm">
-          <h2>Novo grupo</h2>
+          <h2 id="groupFormTitle">Novo grupo</h2>
           <div class="form-grid">
             <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
             <label>Número do WhatsApp <input id="groupNumber" inputmode="numeric" placeholder="5594991031837" required></label>
@@ -267,10 +268,11 @@
             <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
             <button class="btn secondary" type="reset" id="groupResetBtn">Limpar</button>
           </div>
+          <p class="status-line" id="groupStatus"></p>
         </form>
 
         <form class="panel" id="linkForm">
-          <h2>Novo link</h2>
+          <h2 id="linkFormTitle">Novo link</h2>
           <div class="form-grid">
             <label>Grupo <select id="linkGroup" required></select></label>
             <label>Nome da campanha/link <input id="linkName" placeholder="Ex: Botox - Story 01" required></label>
@@ -280,6 +282,7 @@
             <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
             <button class="btn secondary" type="reset" id="linkResetBtn">Limpar</button>
           </div>
+          <p class="status-line" id="linkStatus"></p>
         </form>
       </div>
 
@@ -312,6 +315,10 @@
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
     const storageMode = document.getElementById('storageMode');
+    const groupFormTitle = document.getElementById('groupFormTitle');
+    const linkFormTitle = document.getElementById('linkFormTitle');
+    const groupStatus = document.getElementById('groupStatus');
+    const linkStatus = document.getElementById('linkStatus');
     const groupSubmitBtn = document.getElementById('groupSubmitBtn');
     const groupResetBtn = document.getElementById('groupResetBtn');
     const linkSubmitBtn = document.getElementById('linkSubmitBtn');
@@ -495,6 +502,7 @@
         method: 'PATCH',
         body: JSON.stringify({
           group_id: groupDbId,
+          slug: link.id,
           name: link.name,
           message: link.message
         })
@@ -580,16 +588,20 @@
     function resetGroupForm() {
       editingGroupId = null;
       groupForm.reset();
+      groupFormTitle.textContent = 'Novo grupo';
       groupSubmitBtn.textContent = 'Criar grupo';
       groupResetBtn.textContent = 'Limpar';
+      groupStatus.textContent = '';
     }
 
     function resetLinkForm() {
       editingLinkId = null;
       linkForm.reset();
       document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      linkFormTitle.textContent = 'Novo link';
       linkSubmitBtn.textContent = 'Criar link';
       linkResetBtn.textContent = 'Limpar';
+      linkStatus.textContent = '';
     }
 
     function renderSelect(groups) {
@@ -663,6 +675,7 @@
               <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiEndpoint ? ' + CAPI' : ''}</span>
             </div>
             <div class="actions" style="margin-top: 0;">
+              <button class="btn" type="button" data-add-link="${escapeHtml(group.id)}">Adicionar link</button>
               <button class="btn secondary" type="button" data-edit-group="${escapeHtml(group.id)}">Editar grupo</button>
               <button class="btn danger" type="button" data-delete-group="${escapeHtml(group.id)}">Excluir grupo</button>
             </div>
@@ -685,9 +698,20 @@
       document.getElementById('groupNumber').value = group.number;
       document.getElementById('groupPixel').value = group.pixelId || '';
       document.getElementById('groupCapi').value = group.capiEndpoint || '';
+      groupFormTitle.textContent = `Editando grupo: ${group.name}`;
       groupSubmitBtn.textContent = 'Salvar grupo';
       groupResetBtn.textContent = 'Cancelar';
+      groupStatus.textContent = 'Altere os dados e clique em Salvar grupo.';
       groupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function startLinkForGroup(group) {
+      resetLinkForm();
+      linkGroup.value = group.id;
+      linkFormTitle.textContent = `Novo link em: ${group.name}`;
+      linkStatus.textContent = 'Crie uma nova mensagem/campanha para este grupo.';
+      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('linkName').focus();
     }
 
     function fillLinkForm(group, link) {
@@ -695,8 +719,10 @@
       linkGroup.value = group.id;
       document.getElementById('linkName').value = link.name;
       document.getElementById('linkMessage').value = link.message;
+      linkFormTitle.textContent = `Editando link: ${link.name}`;
       linkSubmitBtn.textContent = 'Salvar link';
       linkResetBtn.textContent = 'Cancelar';
+      linkStatus.textContent = 'Altere a campanha ou mensagem e clique em Salvar link.';
       linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -791,7 +817,9 @@
         if (editingLinkId) {
           const currentGroup = groups.find((group) => (group.links || []).some((link) => link.id === editingLinkId));
           const currentLink = currentGroup && (currentGroup.links || []).find((link) => link.id === editingLinkId);
-          await updateSupabaseLink(currentLink.dbId, targetGroup.dbId, { name, message });
+          const siblingLinks = (targetGroup.links || []).filter((link) => link.id !== editingLinkId);
+          const id = uniqueId(slugify(`${targetGroup.name}-${name}`), siblingLinks);
+          await updateSupabaseLink(currentLink.dbId, targetGroup.dbId, { id, name, message });
         } else {
           const id = uniqueId(slugify(`${targetGroup.name}-${name}`), targetGroup.links || []);
           await createSupabaseLink(targetGroup.dbId, { id, name, message });
@@ -856,6 +884,7 @@
     groupsList.addEventListener('click', async (event) => {
       const copyValue = event.target.getAttribute('data-copy');
       const editGroupId = event.target.getAttribute('data-edit-group');
+      const addLinkGroupId = event.target.getAttribute('data-add-link');
       const deleteGroupId = event.target.getAttribute('data-delete-group');
       const editLinkId = event.target.getAttribute('data-edit-link');
       const deleteLinkId = event.target.getAttribute('data-delete-link');
@@ -866,6 +895,11 @@
       if (editGroupId) {
         const group = (await getAllGroups()).find((item) => item.id === editGroupId);
         if (group) fillGroupForm(group);
+      }
+
+      if (addLinkGroupId) {
+        const group = (await getAllGroups()).find((item) => item.id === addLinkGroupId);
+        if (group) startLinkForGroup(group);
       }
 
       if (deleteGroupId) {
