@@ -406,7 +406,7 @@
         <div class="form-grid">
           <label>
             Nome do projeto
-            <input id="projectName" placeholder="Clínica Renova" required>
+            <input id="projectName" placeholder="Nome do projeto" required>
           </label>
           <label>
             Número do WhatsApp
@@ -420,10 +420,14 @@
             Pixel ID
             <input id="pixelId" placeholder="Opcional: usa o Pixel padrão se ficar vazio">
           </label>
+          <label>
+            Endpoint da API de Conversões
+            <input id="capiEndpoint" type="url" placeholder="Opcional: URL do seu servidor CAPI">
+          </label>
         </div>
         <div class="actions">
-          <button class="btn" type="submit">Criar link</button>
-          <button class="btn secondary" type="reset">Limpar</button>
+          <button class="btn" type="submit" id="submitBtn">Criar link</button>
+          <button class="btn secondary" type="reset" id="resetBtn">Limpar</button>
         </div>
       </form>
 
@@ -448,6 +452,9 @@
     const linkForm = document.getElementById('linkForm');
     const linksList = document.getElementById('linksList');
     const totalLinks = document.getElementById('totalLinks');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    let editingId = null;
 
     function slugify(value) {
       return value
@@ -500,7 +507,30 @@
       if (item.pixelId) {
         url.searchParams.set('px', item.pixelId);
       }
+      if (item.capiEndpoint) {
+        url.searchParams.set('capi', item.capiEndpoint);
+      }
       return url.href;
+    }
+
+    function resetForm() {
+      editingId = null;
+      linkForm.reset();
+      document.getElementById('whatsappMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      submitBtn.textContent = 'Criar link';
+      resetBtn.textContent = 'Limpar';
+    }
+
+    function fillForm(item) {
+      editingId = item.id;
+      document.getElementById('projectName').value = item.name;
+      document.getElementById('whatsappNumber').value = item.number;
+      document.getElementById('whatsappMessage').value = item.message;
+      document.getElementById('pixelId').value = item.pixelId || '';
+      document.getElementById('capiEndpoint').value = item.capiEndpoint || '';
+      submitBtn.textContent = 'Salvar alterações';
+      resetBtn.textContent = 'Cancelar';
+      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     async function copyText(text, button) {
@@ -534,7 +564,7 @@
                   <span>lid=${escapeHtml(item.id)}</span>
                 </div>
               </div>
-              <span class="pill">${item.pixelId ? 'Pixel próprio' : 'Pixel padrão'}</span>
+              <span class="pill">${item.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${item.capiEndpoint ? ' + CAPI' : ''}</span>
             </div>
             <div class="url-box">
               <input readonly value="${safeUrl}">
@@ -543,6 +573,7 @@
             <p>${escapeHtml(item.message)}</p>
             <div class="actions" style="margin-top: 0;">
               <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+              <button class="btn secondary" type="button" data-edit="${escapeHtml(item.id)}">Editar</button>
               <button class="btn danger" type="button" data-delete="${escapeHtml(item.id)}">Excluir</button>
             </div>
           </article>
@@ -576,15 +607,44 @@
       const number = document.getElementById('whatsappNumber').value.replace(/\D/g, '');
       const message = document.getElementById('whatsappMessage').value.trim();
       const pixelId = document.getElementById('pixelId').value.trim();
+      const capiEndpoint = document.getElementById('capiEndpoint').value.trim();
       const links = getLinks();
 
       if (!name || !number || !message) {
         return;
       }
 
+      if (editingId) {
+        const nextLinks = links.map((item) => {
+          if (item.id !== editingId) {
+            return item;
+          }
+
+          return {
+            ...item,
+            name,
+            number,
+            message,
+            pixelId,
+            capiEndpoint,
+            updatedAt: new Date().toISOString()
+          };
+        });
+
+        saveLinks(nextLinks);
+        resetForm();
+        renderLinks();
+        return;
+      }
+
       const baseId = slugify(name);
-      const duplicateCount = links.filter((item) => item.id.startsWith(baseId)).length;
-      const id = duplicateCount ? `${baseId}-${duplicateCount + 1}` : baseId;
+      let id = baseId;
+      let suffix = 2;
+
+      while (links.some((item) => item.id === id)) {
+        id = `${baseId}-${suffix}`;
+        suffix += 1;
+      }
 
       links.unshift({
         id,
@@ -592,18 +652,23 @@
         number,
         message,
         pixelId,
+        capiEndpoint,
         createdAt: new Date().toISOString()
       });
 
       saveLinks(links);
-      linkForm.reset();
-      document.getElementById('whatsappMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      resetForm();
       renderLinks();
+    });
+
+    linkForm.addEventListener('reset', () => {
+      window.setTimeout(resetForm, 0);
     });
 
     linksList.addEventListener('click', (event) => {
       const copyValue = event.target.getAttribute('data-copy');
       const deleteId = event.target.getAttribute('data-delete');
+      const editId = event.target.getAttribute('data-edit');
 
       if (copyValue) {
         copyText(copyValue, event.target);
@@ -612,7 +677,17 @@
       if (deleteId) {
         const links = getLinks().filter((item) => item.id !== deleteId);
         saveLinks(links);
+        if (editingId === deleteId) {
+          resetForm();
+        }
         renderLinks();
+      }
+
+      if (editId) {
+        const item = getLinks().find((link) => link.id === editId);
+        if (item) {
+          fillForm(item);
+        }
       }
     });
 

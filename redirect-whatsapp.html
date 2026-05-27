@@ -21,6 +21,9 @@
     const ACTIVE_PIXEL_ID = params.get('px') || PIXEL_ID;
     const ACTIVE_WHATSAPP_NUMBER = (params.get('n') || WHATSAPP_NUMBER).replace(/\D/g, '');
     const ACTIVE_WHATSAPP_MSG = params.get('msg') || WHATSAPP_MSG;
+    const CAPI_ENDPOINT = params.get('capi') || '';
+    const LEAD_EVENT_ID = `${LINK_ID}-lead-${Date.now()}`;
+    const CONTACT_EVENT_ID = `${LINK_ID}-contact-${Date.now()}`;
 
     const pixelData = {
       content_name: PROJECT_NAME,
@@ -37,7 +40,7 @@
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', ACTIVE_PIXEL_ID);
-    fbq('track', 'Lead', pixelData);
+    fbq('track', 'Lead', pixelData, { eventID: LEAD_EVENT_ID });
   </script>
 
   <noscript>
@@ -320,15 +323,50 @@
       return `https://wa.me/${ACTIVE_WHATSAPP_NUMBER}?text=${encodeURIComponent(ACTIVE_WHATSAPP_MSG)}`;
     }
 
+    function sendCapiEvent(eventName, eventId) {
+      if (!CAPI_ENDPOINT) {
+        return;
+      }
+
+      const payload = {
+        event_name: eventName,
+        event_id: eventId,
+        event_source_url: window.location.href,
+        pixel_id: ACTIVE_PIXEL_ID,
+        link_id: LINK_ID,
+        project_name: PROJECT_NAME,
+        content_category: 'whatsapp_redirect',
+        user_agent: navigator.userAgent
+      };
+
+      const body = JSON.stringify(payload);
+
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(CAPI_ENDPOINT, new Blob([body], { type: 'application/json' }));
+        return;
+      }
+
+      fetch(CAPI_ENDPOINT, {
+        method: 'POST',
+        body,
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+    }
+
     progressStates.forEach((state) => {
       window.setTimeout(() => updateProgress(state), state.delay);
     });
 
+    sendCapiEvent('Lead', LEAD_EVENT_ID);
+
     window.setTimeout(() => {
       if (window.fbq) {
-        fbq('track', 'Contact', pixelData);
+        fbq('track', 'Contact', pixelData, { eventID: CONTACT_EVENT_ID });
         fbq('trackCustom', 'WhatsAppRedirect', pixelData);
       }
+
+      sendCapiEvent('Contact', CONTACT_EVENT_ID);
 
       window.setTimeout(() => {
         window.location.href = buildWhatsAppUrl();
