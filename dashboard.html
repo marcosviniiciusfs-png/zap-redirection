@@ -245,7 +245,7 @@
     <div class="metrics">
       <div class="metric"><strong id="totalGroups">0</strong><span>Grupos criados neste navegador.</span></div>
       <div class="metric"><strong id="totalLinks">0</strong><span>Links e mensagens personalizados.</span></div>
-      <div class="metric"><strong>gid</strong><span>Use o grupo para conversões personalizadas na Meta.</span></div>
+      <div class="metric"><strong id="storageMode">Local</strong><span>Modo de armazenamento ativo.</span></div>
       <div class="metric"><strong>lid</strong><span>Use o link para diferenciar campanhas e anúncios.</span></div>
     </div>
 
@@ -298,6 +298,7 @@
     const GROUPS_KEY = 'zap_redirect_groups_v2';
     const LEGACY_LINKS_KEY = 'zap_redirect_links_v1';
     const SESSION_KEY = 'zap_redirect_logged_v1';
+    const SUPABASE_SESSION_KEY = 'zap_redirect_supabase_session_v1';
 
     const loginScreen = document.getElementById('loginScreen');
     const appScreen = document.getElementById('appScreen');
@@ -310,6 +311,7 @@
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
+    const storageMode = document.getElementById('storageMode');
     const groupSubmitBtn = document.getElementById('groupSubmitBtn');
     const groupResetBtn = document.getElementById('groupResetBtn');
     const linkSubmitBtn = document.getElementById('linkSubmitBtn');
@@ -317,6 +319,8 @@
 
     let editingGroupId = null;
     let editingLinkId = null;
+    let supabaseSession = readJson(SUPABASE_SESSION_KEY) || null;
+    let dataMode = 'Local';
 
     function slugify(value) {
       return value
@@ -340,6 +344,168 @@
     function readJson(key) {
       try { return JSON.parse(localStorage.getItem(key)) || []; }
       catch (error) { return []; }
+    }
+
+    function isSupabaseActive() {
+      return Boolean(supabaseSession && supabaseSession.access_token);
+    }
+
+    function setSupabaseSession(session) {
+      supabaseSession = session;
+      if (session) {
+        localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+      } else {
+        localStorage.removeItem(SUPABASE_SESSION_KEY);
+      }
+    }
+
+    async function supabaseRequest(path, options = {}) {
+      const headers = {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${isSupabaseActive() ? supabaseSession.access_token : SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: options.prefer || 'return=representation',
+        ...(options.headers || {})
+      };
+
+      const response = await fetch(`${SUPABASE_URL}${path}`, {
+        ...options,
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    }
+
+    async function signInWithSupabase(email, password) {
+      const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Supabase Auth recusou o login.');
+      }
+
+      return response.json();
+    }
+
+    function fromDbGroup(row) {
+      return {
+        dbId: row.id,
+        id: row.slug,
+        name: row.name,
+        number: row.whatsapp_number,
+        pixelId: row.pixel_id || '',
+        capiEndpoint: row.capi_endpoint || '',
+        createdAt: row.created_at,
+        links: (row.redirect_links || []).map((link) => ({
+          dbId: link.id,
+          id: link.slug,
+          name: link.name,
+          message: link.message,
+          createdAt: link.created_at,
+          updatedAt: link.updated_at
+        }))
+      };
+    }
+
+    async function getSupabaseGroups() {
+      const rows = await supabaseRequest('/rest/v1/redirect_groups?select=*,redirect_links(*)&order=created_at.desc&redirect_links.order=created_at.desc', {
+        method: 'GET',
+        prefer: ''
+      });
+
+      return rows.map(fromDbGroup);
+    }
+
+    async function getAllGroups() {
+      if (isSupabaseActive()) {
+        try {
+          const groups = await getSupabaseGroups();
+          dataMode = 'Supabase';
+          return groups;
+        } catch (error) {
+          dataMode = 'Local';
+          setSupabaseSession(null);
+        }
+      }
+
+      dataMode = 'Local';
+      return getGroups();
+    }
+
+    async function createSupabaseGroup(group) {
+      await supabaseRequest('/rest/v1/redirect_groups', {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: group.id,
+          name: group.name,
+          whatsapp_number: group.number,
+          pixel_id: group.pixelId || null,
+          capi_endpoint: group.capiEndpoint || null
+        })
+      });
+    }
+
+    async function updateSupabaseGroup(groupDbId, group) {
+      await supabaseRequest(`/rest/v1/redirect_groups?id=eq.${encodeURIComponent(groupDbId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: group.name,
+          whatsapp_number: group.number,
+          pixel_id: group.pixelId || null,
+          capi_endpoint: group.capiEndpoint || null
+        })
+      });
+    }
+
+    async function deleteSupabaseGroup(groupDbId) {
+      await supabaseRequest(`/rest/v1/redirect_groups?id=eq.${encodeURIComponent(groupDbId)}`, {
+        method: 'DELETE',
+        prefer: 'return=minimal'
+      });
+    }
+
+    async function createSupabaseLink(groupDbId, link) {
+      await supabaseRequest('/rest/v1/redirect_links', {
+        method: 'POST',
+        body: JSON.stringify({
+          group_id: groupDbId,
+          slug: link.id,
+          name: link.name,
+          message: link.message
+        })
+      });
+    }
+
+    async function updateSupabaseLink(linkDbId, groupDbId, link) {
+      await supabaseRequest(`/rest/v1/redirect_links?id=eq.${encodeURIComponent(linkDbId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          group_id: groupDbId,
+          name: link.name,
+          message: link.message
+        })
+      });
+    }
+
+    async function deleteSupabaseLink(linkDbId) {
+      await supabaseRequest(`/rest/v1/redirect_links?id=eq.${encodeURIComponent(linkDbId)}`, {
+        method: 'DELETE',
+        prefer: 'return=minimal'
+      });
     }
 
     function getGroups() {
@@ -400,10 +566,10 @@
       return url.href;
     }
 
-    function showApp() {
+    async function showApp() {
       loginScreen.classList.add('hidden');
       appScreen.classList.remove('hidden');
-      render();
+      await render();
     }
 
     function showLogin() {
@@ -439,11 +605,12 @@
         .join('');
     }
 
-    function render() {
-      const groups = getGroups();
+    async function render() {
+      const groups = await getAllGroups();
       const linkCount = groups.reduce((total, group) => total + (group.links || []).length, 0);
       totalGroups.textContent = groups.length;
       totalLinks.textContent = linkCount;
+      storageMode.textContent = dataMode;
       renderSelect(groups);
 
       if (!groups.length) {
@@ -533,15 +700,26 @@
       linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    loginForm.addEventListener('submit', (event) => {
+    loginForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
 
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      try {
+        const session = await signInWithSupabase(email, password);
+        setSupabaseSession(session);
         sessionStorage.setItem(SESSION_KEY, 'true');
         loginError.textContent = '';
-        showApp();
+        await showApp();
+        return;
+      } catch (error) {
+        setSupabaseSession(null);
+      }
+
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        loginError.textContent = 'Entrando em modo local. Crie o usuário no Supabase Auth para sincronizar no banco.';
+        await showApp();
         return;
       }
 
@@ -550,12 +728,13 @@
 
     logoutBtn.addEventListener('click', () => {
       sessionStorage.removeItem(SESSION_KEY);
+      setSupabaseSession(null);
       showLogin();
     });
 
-    groupForm.addEventListener('submit', (event) => {
+    groupForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const groups = getGroups();
+      const groups = await getAllGroups();
       const name = document.getElementById('groupName').value.trim();
       const number = document.getElementById('groupNumber').value.replace(/\D/g, '');
       const pixelId = document.getElementById('groupPixel').value.trim();
@@ -564,32 +743,64 @@
       if (!name || !number) return;
 
       if (editingGroupId) {
-        saveGroups(groups.map((group) => group.id === editingGroupId ? {
-          ...group,
+        const updatedGroup = {
           name,
           number,
           pixelId,
-          capiEndpoint,
-          updatedAt: new Date().toISOString()
-        } : group));
+          capiEndpoint
+        };
+
+        if (isSupabaseActive()) {
+          const currentGroup = groups.find((group) => group.id === editingGroupId);
+          await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
+        } else {
+          saveGroups(groups.map((group) => group.id === editingGroupId ? {
+            ...group,
+            ...updatedGroup,
+            updatedAt: new Date().toISOString()
+          } : group));
+        }
       } else {
         const id = uniqueId(slugify(name), groups);
-        groups.unshift({ id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() });
-        saveGroups(groups);
+        const newGroup = { id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() };
+
+        if (isSupabaseActive()) {
+          await createSupabaseGroup(newGroup);
+        } else {
+          groups.unshift(newGroup);
+          saveGroups(groups);
+        }
       }
 
       resetGroupForm();
-      render();
+      await render();
     });
 
-    linkForm.addEventListener('submit', (event) => {
+    linkForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const groups = getGroups();
+      const groups = await getAllGroups();
       const groupId = linkGroup.value;
       const name = document.getElementById('linkName').value.trim();
       const message = document.getElementById('linkMessage').value.trim();
 
       if (!groupId || !name || !message) return;
+
+      if (isSupabaseActive()) {
+        const targetGroup = groups.find((group) => group.id === groupId);
+
+        if (editingLinkId) {
+          const currentGroup = groups.find((group) => (group.links || []).some((link) => link.id === editingLinkId));
+          const currentLink = currentGroup && (currentGroup.links || []).find((link) => link.id === editingLinkId);
+          await updateSupabaseLink(currentLink.dbId, targetGroup.dbId, { name, message });
+        } else {
+          const id = uniqueId(slugify(`${targetGroup.name}-${name}`), targetGroup.links || []);
+          await createSupabaseLink(targetGroup.dbId, { id, name, message });
+        }
+
+        resetLinkForm();
+        await render();
+        return;
+      }
 
       const nextGroups = groups.map((group) => {
         const links = group.links || [];
@@ -636,13 +847,13 @@
 
       saveGroups(nextGroups);
       resetLinkForm();
-      render();
+      await render();
     });
 
     groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
     linkForm.addEventListener('reset', () => window.setTimeout(resetLinkForm, 0));
 
-    groupsList.addEventListener('click', (event) => {
+    groupsList.addEventListener('click', async (event) => {
       const copyValue = event.target.getAttribute('data-copy');
       const editGroupId = event.target.getAttribute('data-edit-group');
       const deleteGroupId = event.target.getAttribute('data-delete-group');
@@ -653,29 +864,46 @@
       if (copyValue) copyText(copyValue, event.target);
 
       if (editGroupId) {
-        const group = getGroups().find((item) => item.id === editGroupId);
+        const group = (await getAllGroups()).find((item) => item.id === editGroupId);
         if (group) fillGroupForm(group);
       }
 
       if (deleteGroupId) {
-        saveGroups(getGroups().filter((group) => group.id !== deleteGroupId));
+        const groups = await getAllGroups();
+        const group = groups.find((item) => item.id === deleteGroupId);
+
+        if (isSupabaseActive()) {
+          await deleteSupabaseGroup(group.dbId);
+        } else {
+          saveGroups(groups.filter((item) => item.id !== deleteGroupId));
+        }
+
         if (editingGroupId === deleteGroupId) resetGroupForm();
-        render();
+        await render();
       }
 
       if (editLinkId && groupId) {
-        const group = getGroups().find((item) => item.id === groupId);
+        const group = (await getAllGroups()).find((item) => item.id === groupId);
         const link = group && (group.links || []).find((item) => item.id === editLinkId);
         if (group && link) fillLinkForm(group, link);
       }
 
       if (deleteLinkId && groupId) {
-        saveGroups(getGroups().map((group) => group.id === groupId ? {
-          ...group,
-          links: (group.links || []).filter((link) => link.id !== deleteLinkId)
-        } : group));
+        const groups = await getAllGroups();
+        const group = groups.find((item) => item.id === groupId);
+        const link = group && (group.links || []).find((item) => item.id === deleteLinkId);
+
+        if (isSupabaseActive()) {
+          await deleteSupabaseLink(link.dbId);
+        } else {
+          saveGroups(groups.map((item) => item.id === groupId ? {
+            ...item,
+            links: (item.links || []).filter((groupLink) => groupLink.id !== deleteLinkId)
+          } : item));
+        }
+
         if (editingLinkId === deleteLinkId) resetLinkForm();
-        render();
+        await render();
       }
     });
 
