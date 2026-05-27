@@ -21,9 +21,7 @@
       --shadow: 0 20px 60px rgba(36, 31, 26, 0.11);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -35,68 +33,34 @@
         var(--bg);
     }
 
-    button,
-    input,
-    textarea {
-      font: inherit;
-    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
 
-    button {
-      cursor: pointer;
-    }
+    .screen { min-height: 100vh; padding: 22px; }
+    .login-wrap { display: grid; place-items: center; }
+    .app { max-width: 1220px; margin: 0 auto; }
 
-    .screen {
-      min-height: 100vh;
-      padding: 22px;
-    }
-
-    .login-wrap {
-      display: grid;
-      place-items: center;
-    }
-
-    .login-card,
-    .panel {
+    .login-card, .panel, .metric {
       background: var(--panel);
       border: 1px solid rgba(255, 255, 255, 0.76);
       border-radius: 8px;
       box-shadow: var(--shadow);
     }
 
-    .login-card {
-      width: min(100%, 430px);
-      padding: 34px;
-    }
+    .login-card { width: min(100%, 430px); padding: 34px; }
+    .panel { padding: 22px; }
 
-    h1,
-    h2,
-    h3 {
+    h1, h2, h3 {
       margin: 0;
       font-family: "Fraunces", Georgia, serif;
       font-weight: 600;
       letter-spacing: 0;
     }
 
-    h1 {
-      font-size: clamp(2.05rem, 6vw, 3rem);
-      line-height: 1;
-      margin-bottom: 12px;
-    }
-
-    h2 {
-      font-size: 1.35rem;
-      margin-bottom: 18px;
-    }
-
-    h3 {
-      font-size: 1.1rem;
-    }
-
-    p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-    }
+    h1 { font-size: clamp(2.05rem, 6vw, 3rem); line-height: 1; margin-bottom: 12px; }
+    h2 { font-size: 1.35rem; margin-bottom: 16px; }
+    h3 { font-size: 1.12rem; }
+    p { margin: 0; color: var(--muted); line-height: 1.5; }
 
     label {
       display: grid;
@@ -106,8 +70,7 @@
       font-weight: 700;
     }
 
-    input,
-    textarea {
+    input, select, textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -117,79 +80,11 @@
       outline: none;
     }
 
-    textarea {
-      min-height: 92px;
-      resize: vertical;
-    }
+    textarea { min-height: 92px; resize: vertical; }
 
-    input:focus,
-    textarea:focus {
+    input:focus, select:focus, textarea:focus {
       border-color: var(--green-dark);
       box-shadow: 0 0 0 4px rgba(18, 140, 126, 0.13);
-    }
-
-    .form-grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-top: 18px;
-    }
-
-    .btn {
-      min-height: 42px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 15px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      color: #fff;
-      font-weight: 700;
-      background: var(--green-dark);
-    }
-
-    .btn:hover {
-      background: #0f766a;
-    }
-
-    .btn.secondary {
-      color: var(--ink);
-      background: rgba(245, 240, 232, 0.72);
-      border-color: var(--line);
-    }
-
-    .btn.secondary:hover {
-      background: #efe7da;
-    }
-
-    .btn.danger {
-      color: var(--danger);
-      background: #fff;
-      border-color: rgba(164, 60, 47, 0.28);
-    }
-
-    .btn.danger:hover {
-      background: rgba(164, 60, 47, 0.08);
-    }
-
-    .error {
-      min-height: 22px;
-      margin-top: 12px;
-      color: var(--danger);
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-
-    .app {
-      max-width: 1180px;
-      margin: 0 auto;
     }
 
     .topbar {
@@ -200,49 +95,18 @@
       margin-bottom: 20px;
     }
 
-    .topbar p {
-      max-width: 690px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(300px, 420px) 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .panel {
-      padding: 22px;
-    }
+    .topbar p { max-width: 760px; }
 
     .metrics {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
       margin-bottom: 18px;
     }
 
-    .metric {
-      min-height: 94px;
-      padding: 16px;
-      background: var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.76);
-      border-radius: 8px;
-      box-shadow: 0 12px 34px rgba(36, 31, 26, 0.08);
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 1.7rem;
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-
-    .metric span {
-      color: var(--muted);
-      font-size: 0.86rem;
-      line-height: 1.35;
-    }
+    .metric { min-height: 94px; padding: 16px; box-shadow: 0 12px 34px rgba(36, 31, 26, 0.08); }
+    .metric strong { display: block; font-size: 1.65rem; line-height: 1; margin-bottom: 8px; }
+    .metric span { color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
 
     .notice {
       margin-bottom: 18px;
@@ -255,32 +119,64 @@
       line-height: 1.45;
     }
 
-    .links {
+    .grid {
       display: grid;
-      gap: 12px;
+      grid-template-columns: minmax(310px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
     }
 
-    .empty {
-      padding: 24px;
-      text-align: center;
-      border: 1px dashed var(--line);
+    .forms { display: grid; gap: 18px; }
+    .form-grid { display: grid; gap: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+
+    .btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid transparent;
       border-radius: 8px;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      background: var(--green-dark);
     }
 
-    .link-row {
+    .btn:hover { background: #0f766a; }
+    .btn.secondary { color: var(--ink); background: rgba(245, 240, 232, 0.72); border-color: var(--line); }
+    .btn.secondary:hover { background: #efe7da; }
+    .btn.danger { color: var(--danger); background: #fff; border-color: rgba(164, 60, 47, 0.28); }
+    .btn.danger:hover { background: rgba(164, 60, 47, 0.08); }
+
+    .error { min-height: 22px; margin-top: 12px; color: var(--danger); font-size: 0.9rem; font-weight: 700; }
+    .groups { display: grid; gap: 14px; }
+    .empty { padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 8px; }
+
+    .group-card {
       display: grid;
-      gap: 12px;
-      padding: 15px;
+      gap: 14px;
+      padding: 16px;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 8px;
     }
 
-    .link-head {
+    .group-head, .link-head {
       display: flex;
       justify-content: space-between;
       gap: 14px;
-      align-items: start;
+      align-items: flex-start;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
     }
 
     .pill {
@@ -296,57 +192,30 @@
       white-space: nowrap;
     }
 
-    .url-box {
+    .link-row {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
+      gap: 10px;
+      padding: 13px;
+      background: rgba(245, 240, 232, 0.45);
+      border: 1px solid var(--line);
+      border-radius: 8px;
     }
 
-    .url-box input {
-      font-size: 0.86rem;
-    }
+    .link-list { display: grid; gap: 10px; }
+    .url-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .url-box input { font-size: 0.86rem; }
+    .hidden { display: none !important; }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 0.82rem;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 860px) {
-      .grid,
-      .metrics {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .url-box {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 900px) {
+      .grid, .metrics { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .url-box { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 460px) {
-      .screen {
-        padding: 14px;
-      }
-
-      .login-card,
-      .panel {
-        padding: 18px;
-      }
-
-      .actions .btn {
-        width: 100%;
-      }
+      .screen { padding: 14px; }
+      .login-card, .panel { padding: 18px; }
+      .actions .btn { width: 100%; }
     }
   </style>
 </head>
@@ -354,20 +223,12 @@
   <section class="screen login-wrap" id="loginScreen">
     <form class="login-card" id="loginForm">
       <h1>Dashboard</h1>
-      <p>Entre para criar links de redirecionamento com Pixel e mensagem personalizada.</p>
+      <p>Entre para criar grupos e links de redirecionamento com Pixel, CAPI e mensagens personalizadas.</p>
       <div class="form-grid" style="margin-top: 22px;">
-        <label>
-          E-mail
-          <input id="loginEmail" type="email" autocomplete="email" required>
-        </label>
-        <label>
-          Senha
-          <input id="loginPassword" type="password" autocomplete="current-password" required>
-        </label>
+        <label>E-mail <input id="loginEmail" type="email" autocomplete="email" required></label>
+        <label>Senha <input id="loginPassword" type="password" autocomplete="current-password" required></label>
       </div>
-      <div class="actions">
-        <button class="btn" type="submit">Entrar</button>
-      </div>
+      <div class="actions"><button class="btn" type="submit">Entrar</button></div>
       <p class="error" id="loginError"></p>
     </form>
   </section>
@@ -375,65 +236,56 @@
   <section class="screen app hidden" id="appScreen">
     <header class="topbar">
       <div>
-        <h1>Links de WhatsApp</h1>
-        <p>Crie links por cliente, campanha ou projeto. Cada link envia parâmetros próprios para o Pixel e abre o WhatsApp com a mensagem definida.</p>
+        <h1>Grupos de WhatsApp</h1>
+        <p>Crie um grupo por cliente, número ou Pixel. Dentro de cada grupo, crie vários links com mensagens diferentes para campanhas e anúncios.</p>
       </div>
       <button class="btn secondary" type="button" id="logoutBtn">Sair</button>
     </header>
 
     <div class="metrics">
-      <div class="metric">
-        <strong id="totalLinks">0</strong>
-        <span>Links criados neste navegador.</span>
-      </div>
-      <div class="metric">
-        <strong>Lead</strong>
-        <span>Evento enviado assim que a página de redirecionamento carrega.</span>
-      </div>
-      <div class="metric">
-        <strong>Contact</strong>
-        <span>Evento enviado instantes antes do envio para o WhatsApp.</span>
-      </div>
+      <div class="metric"><strong id="totalGroups">0</strong><span>Grupos criados neste navegador.</span></div>
+      <div class="metric"><strong id="totalLinks">0</strong><span>Links e mensagens personalizados.</span></div>
+      <div class="metric"><strong>gid</strong><span>Use o grupo para conversões personalizadas na Meta.</span></div>
+      <div class="metric"><strong>lid</strong><span>Use o link para diferenciar campanhas e anúncios.</span></div>
     </div>
 
     <div class="notice">
-      Para conversão personalizada na Meta, use o evento <strong>Lead</strong> ou <strong>Contact</strong> filtrando por URL que contém <strong>lid=</strong> ou pelo parâmetro <strong>content_name</strong> do projeto. A diferença entre Lead e Contact indica pessoas que carregaram a página, mas não chegaram ao redirecionamento.
+      Melhor prática: crie uma conversão personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vários links do mesmo número/cliente usam a mesma conversão, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
     </div>
 
     <div class="grid">
-      <form class="panel" id="linkForm">
-        <h2>Novo link</h2>
-        <div class="form-grid">
-          <label>
-            Nome do projeto
-            <input id="projectName" placeholder="Nome do projeto" required>
-          </label>
-          <label>
-            Número do WhatsApp
-            <input id="whatsappNumber" inputmode="numeric" placeholder="5594991031837" required>
-          </label>
-          <label>
-            Mensagem personalizada
-            <textarea id="whatsappMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea>
-          </label>
-          <label>
-            Pixel ID
-            <input id="pixelId" placeholder="Opcional: usa o Pixel padrão se ficar vazio">
-          </label>
-          <label>
-            Endpoint da API de Conversões
-            <input id="capiEndpoint" type="url" placeholder="Opcional: URL do seu servidor CAPI">
-          </label>
-        </div>
-        <div class="actions">
-          <button class="btn" type="submit" id="submitBtn">Criar link</button>
-          <button class="btn secondary" type="reset" id="resetBtn">Limpar</button>
-        </div>
-      </form>
+      <div class="forms">
+        <form class="panel" id="groupForm">
+          <h2>Novo grupo</h2>
+          <div class="form-grid">
+            <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
+            <label>Número do WhatsApp <input id="groupNumber" inputmode="numeric" placeholder="5594991031837" required></label>
+            <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
+            <label>Endpoint da API de Conversões <input id="groupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
+            <button class="btn secondary" type="reset" id="groupResetBtn">Limpar</button>
+          </div>
+        </form>
+
+        <form class="panel" id="linkForm">
+          <h2>Novo link</h2>
+          <div class="form-grid">
+            <label>Grupo <select id="linkGroup" required></select></label>
+            <label>Nome da campanha/link <input id="linkName" placeholder="Ex: Botox - Story 01" required></label>
+            <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
+            <button class="btn secondary" type="reset" id="linkResetBtn">Limpar</button>
+          </div>
+        </form>
+      </div>
 
       <section class="panel">
-        <h2>Links criados</h2>
-        <div class="links" id="linksList"></div>
+        <h2>Grupos e links</h2>
+        <div class="groups" id="groupsList"></div>
       </section>
     </div>
   </section>
@@ -441,7 +293,8 @@
   <script>
     const ADMIN_EMAIL = 'hurtzgestao@gmail.com';
     const ADMIN_PASSWORD = 'NovoRei@01Hurtz';
-    const STORAGE_KEY = 'zap_redirect_links_v1';
+    const GROUPS_KEY = 'zap_redirect_groups_v2';
+    const LEGACY_LINKS_KEY = 'zap_redirect_links_v1';
     const SESSION_KEY = 'zap_redirect_logged_v1';
 
     const loginScreen = document.getElementById('loginScreen');
@@ -449,12 +302,19 @@
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
     const logoutBtn = document.getElementById('logoutBtn');
+    const groupForm = document.getElementById('groupForm');
     const linkForm = document.getElementById('linkForm');
-    const linksList = document.getElementById('linksList');
+    const groupsList = document.getElementById('groupsList');
+    const linkGroup = document.getElementById('linkGroup');
+    const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
-    const submitBtn = document.getElementById('submitBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    let editingId = null;
+    const groupSubmitBtn = document.getElementById('groupSubmitBtn');
+    const groupResetBtn = document.getElementById('groupResetBtn');
+    const linkSubmitBtn = document.getElementById('linkSubmitBtn');
+    const linkResetBtn = document.getElementById('linkResetBtn');
+
+    let editingGroupId = null;
+    let editingLinkId = null;
 
     function slugify(value) {
       return value
@@ -463,7 +323,7 @@
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-        .slice(0, 54) || 'link';
+        .slice(0, 54) || 'item';
     }
 
     function escapeHtml(value) {
@@ -475,22 +335,73 @@
         .replace(/'/g, '&#039;');
     }
 
-    function getLinks() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-      } catch (error) {
-        return [];
-      }
+    function readJson(key) {
+      try { return JSON.parse(localStorage.getItem(key)) || []; }
+      catch (error) { return []; }
     }
 
-    function saveLinks(links) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+    function getGroups() {
+      const groups = readJson(GROUPS_KEY);
+      if (groups.length) {
+        return groups;
+      }
+
+      const legacyLinks = readJson(LEGACY_LINKS_KEY);
+      if (!legacyLinks.length) {
+        return [];
+      }
+
+      const legacyGroup = {
+        id: 'links-antigos',
+        name: 'Links antigos',
+        number: legacyLinks[0].number || '5594991031837',
+        pixelId: legacyLinks[0].pixelId || '',
+        capiEndpoint: legacyLinks[0].capiEndpoint || '',
+        createdAt: new Date().toISOString(),
+        links: legacyLinks.map((link) => ({
+          id: link.id,
+          name: link.name,
+          message: link.message,
+          createdAt: link.createdAt || new Date().toISOString()
+        }))
+      };
+
+      saveGroups([legacyGroup]);
+      return [legacyGroup];
+    }
+
+    function saveGroups(groups) {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    }
+
+    function uniqueId(base, items) {
+      let id = base;
+      let suffix = 2;
+      while (items.some((item) => item.id === id)) {
+        id = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      return id;
+    }
+
+    function buildLink(group, link) {
+      const url = new URL('index.html', window.location.href);
+      url.searchParams.set('gid', group.id);
+      url.searchParams.set('gname', group.name);
+      url.searchParams.set('lid', link.id);
+      url.searchParams.set('name', link.name);
+      url.searchParams.set('campaign', link.name);
+      url.searchParams.set('n', group.number);
+      url.searchParams.set('msg', link.message);
+      if (group.pixelId) url.searchParams.set('px', group.pixelId);
+      if (group.capiEndpoint) url.searchParams.set('capi', group.capiEndpoint);
+      return url.href;
     }
 
     function showApp() {
       loginScreen.classList.add('hidden');
       appScreen.classList.remove('hidden');
-      renderLinks();
+      render();
     }
 
     function showLogin() {
@@ -498,87 +409,126 @@
       loginScreen.classList.remove('hidden');
     }
 
-    function buildLink(item) {
-      const url = new URL('index.html', window.location.href);
-      url.searchParams.set('lid', item.id);
-      url.searchParams.set('name', item.name);
-      url.searchParams.set('n', item.number);
-      url.searchParams.set('msg', item.message);
-      if (item.pixelId) {
-        url.searchParams.set('px', item.pixelId);
-      }
-      if (item.capiEndpoint) {
-        url.searchParams.set('capi', item.capiEndpoint);
-      }
-      return url.href;
+    function resetGroupForm() {
+      editingGroupId = null;
+      groupForm.reset();
+      groupSubmitBtn.textContent = 'Criar grupo';
+      groupResetBtn.textContent = 'Limpar';
     }
 
-    function resetForm() {
-      editingId = null;
+    function resetLinkForm() {
+      editingLinkId = null;
       linkForm.reset();
-      document.getElementById('whatsappMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
-      submitBtn.textContent = 'Criar link';
-      resetBtn.textContent = 'Limpar';
+      document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      linkSubmitBtn.textContent = 'Criar link';
+      linkResetBtn.textContent = 'Limpar';
     }
 
-    function fillForm(item) {
-      editingId = item.id;
-      document.getElementById('projectName').value = item.name;
-      document.getElementById('whatsappNumber').value = item.number;
-      document.getElementById('whatsappMessage').value = item.message;
-      document.getElementById('pixelId').value = item.pixelId || '';
-      document.getElementById('capiEndpoint').value = item.capiEndpoint || '';
-      submitBtn.textContent = 'Salvar alterações';
-      resetBtn.textContent = 'Cancelar';
-      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    function renderSelect(groups) {
+      if (!groups.length) {
+        linkGroup.innerHTML = '<option value="">Crie um grupo primeiro</option>';
+        linkGroup.disabled = true;
+        return;
+      }
+
+      linkGroup.disabled = false;
+      linkGroup.innerHTML = groups
+        .map((group) => `<option value="${escapeHtml(group.id)}">${escapeHtml(group.name)}</option>`)
+        .join('');
+    }
+
+    function render() {
+      const groups = getGroups();
+      const linkCount = groups.reduce((total, group) => total + (group.links || []).length, 0);
+      totalGroups.textContent = groups.length;
+      totalLinks.textContent = linkCount;
+      renderSelect(groups);
+
+      if (!groups.length) {
+        groupsList.innerHTML = '<div class="empty"><p>Nenhum grupo criado ainda.</p></div>';
+        return;
+      }
+
+      groupsList.innerHTML = groups.map((group) => {
+        const links = group.links || [];
+        const linkHtml = links.length ? links.map((link) => {
+          const url = buildLink(group, link);
+          const safeUrl = escapeHtml(url);
+          return `
+            <article class="link-row">
+              <div class="link-head">
+                <div>
+                  <h3>${escapeHtml(link.name)}</h3>
+                  <div class="meta">
+                    <span>lid=${escapeHtml(link.id)}</span>
+                    <span>gid=${escapeHtml(group.id)}</span>
+                  </div>
+                </div>
+                <span class="pill">Mensagem</span>
+              </div>
+              <div class="url-box">
+                <input readonly value="${safeUrl}">
+                <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
+              </div>
+              <p>${escapeHtml(link.message)}</p>
+              <div class="actions" style="margin-top: 0;">
+                <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+                <button class="btn secondary" type="button" data-edit-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Editar</button>
+                <button class="btn danger" type="button" data-delete-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Excluir</button>
+              </div>
+            </article>
+          `;
+        }).join('') : '<div class="empty"><p>Nenhum link neste grupo ainda.</p></div>';
+
+        return `
+          <article class="group-card">
+            <div class="group-head">
+              <div>
+                <h3>${escapeHtml(group.name)}</h3>
+                <div class="meta">
+                  <span>${escapeHtml(group.number)}</span>
+                  <span>gid=${escapeHtml(group.id)}</span>
+                  <span>${links.length} link(s)</span>
+                </div>
+              </div>
+              <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiEndpoint ? ' + CAPI' : ''}</span>
+            </div>
+            <div class="actions" style="margin-top: 0;">
+              <button class="btn secondary" type="button" data-edit-group="${escapeHtml(group.id)}">Editar grupo</button>
+              <button class="btn danger" type="button" data-delete-group="${escapeHtml(group.id)}">Excluir grupo</button>
+            </div>
+            <div class="link-list">${linkHtml}</div>
+          </article>
+        `;
+      }).join('');
     }
 
     async function copyText(text, button) {
       await navigator.clipboard.writeText(text);
       const original = button.textContent;
       button.textContent = 'Copiado';
-      window.setTimeout(() => {
-        button.textContent = original;
-      }, 1400);
+      window.setTimeout(() => { button.textContent = original; }, 1400);
     }
 
-    function renderLinks() {
-      const links = getLinks();
-      totalLinks.textContent = links.length;
+    function fillGroupForm(group) {
+      editingGroupId = group.id;
+      document.getElementById('groupName').value = group.name;
+      document.getElementById('groupNumber').value = group.number;
+      document.getElementById('groupPixel').value = group.pixelId || '';
+      document.getElementById('groupCapi').value = group.capiEndpoint || '';
+      groupSubmitBtn.textContent = 'Salvar grupo';
+      groupResetBtn.textContent = 'Cancelar';
+      groupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-      if (!links.length) {
-        linksList.innerHTML = '<div class="empty"><p>Nenhum link criado ainda.</p></div>';
-        return;
-      }
-
-      linksList.innerHTML = links.map((item) => {
-        const url = buildLink(item);
-        const safeUrl = escapeHtml(url);
-        return `
-          <article class="link-row" data-id="${item.id}">
-            <div class="link-head">
-              <div>
-                <h3>${escapeHtml(item.name)}</h3>
-                <div class="meta">
-                  <span>${escapeHtml(item.number)}</span>
-                  <span>lid=${escapeHtml(item.id)}</span>
-                </div>
-              </div>
-              <span class="pill">${item.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${item.capiEndpoint ? ' + CAPI' : ''}</span>
-            </div>
-            <div class="url-box">
-              <input readonly value="${safeUrl}">
-              <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
-            </div>
-            <p>${escapeHtml(item.message)}</p>
-            <div class="actions" style="margin-top: 0;">
-              <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
-              <button class="btn secondary" type="button" data-edit="${escapeHtml(item.id)}">Editar</button>
-              <button class="btn danger" type="button" data-delete="${escapeHtml(item.id)}">Excluir</button>
-            </div>
-          </article>
-        `;
-      }).join('');
+    function fillLinkForm(group, link) {
+      editingLinkId = link.id;
+      linkGroup.value = group.id;
+      document.getElementById('linkName').value = link.name;
+      document.getElementById('linkMessage').value = link.message;
+      linkSubmitBtn.textContent = 'Salvar link';
+      linkResetBtn.textContent = 'Cancelar';
+      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     loginForm.addEventListener('submit', (event) => {
@@ -601,93 +551,129 @@
       showLogin();
     });
 
-    linkForm.addEventListener('submit', (event) => {
+    groupForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      const name = document.getElementById('projectName').value.trim();
-      const number = document.getElementById('whatsappNumber').value.replace(/\D/g, '');
-      const message = document.getElementById('whatsappMessage').value.trim();
-      const pixelId = document.getElementById('pixelId').value.trim();
-      const capiEndpoint = document.getElementById('capiEndpoint').value.trim();
-      const links = getLinks();
+      const groups = getGroups();
+      const name = document.getElementById('groupName').value.trim();
+      const number = document.getElementById('groupNumber').value.replace(/\D/g, '');
+      const pixelId = document.getElementById('groupPixel').value.trim();
+      const capiEndpoint = document.getElementById('groupCapi').value.trim();
 
-      if (!name || !number || !message) {
-        return;
+      if (!name || !number) return;
+
+      if (editingGroupId) {
+        saveGroups(groups.map((group) => group.id === editingGroupId ? {
+          ...group,
+          name,
+          number,
+          pixelId,
+          capiEndpoint,
+          updatedAt: new Date().toISOString()
+        } : group));
+      } else {
+        const id = uniqueId(slugify(name), groups);
+        groups.unshift({ id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() });
+        saveGroups(groups);
       }
 
-      if (editingId) {
-        const nextLinks = links.map((item) => {
-          if (item.id !== editingId) {
-            return item;
+      resetGroupForm();
+      render();
+    });
+
+    linkForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const groups = getGroups();
+      const groupId = linkGroup.value;
+      const name = document.getElementById('linkName').value.trim();
+      const message = document.getElementById('linkMessage').value.trim();
+
+      if (!groupId || !name || !message) return;
+
+      const nextGroups = groups.map((group) => {
+        const links = group.links || [];
+
+        if (editingLinkId) {
+          const currentLink = groups
+            .flatMap((item) => item.links || [])
+            .find((link) => link.id === editingLinkId);
+
+          if (group.id === groupId) {
+            const hasLink = links.some((link) => link.id === editingLinkId);
+            const updatedLink = {
+              ...(currentLink || {}),
+              id: editingLinkId,
+              name,
+              message,
+              updatedAt: new Date().toISOString()
+            };
+
+            return {
+              ...group,
+              links: hasLink
+                ? links.map((link) => link.id === editingLinkId ? updatedLink : link)
+                : [updatedLink, ...links]
+            };
           }
 
           return {
-            ...item,
-            name,
-            number,
-            message,
-            pixelId,
-            capiEndpoint,
-            updatedAt: new Date().toISOString()
+            ...group,
+            links: links.filter((link) => link.id !== editingLinkId)
           };
-        });
+        }
 
-        saveLinks(nextLinks);
-        resetForm();
-        renderLinks();
-        return;
-      }
+        if (group.id !== groupId) {
+          return group;
+        }
 
-      const baseId = slugify(name);
-      let id = baseId;
-      let suffix = 2;
-
-      while (links.some((item) => item.id === id)) {
-        id = `${baseId}-${suffix}`;
-        suffix += 1;
-      }
-
-      links.unshift({
-        id,
-        name,
-        number,
-        message,
-        pixelId,
-        capiEndpoint,
-        createdAt: new Date().toISOString()
+        const id = uniqueId(slugify(`${group.name}-${name}`), links);
+        return {
+          ...group,
+          links: [{ id, name, message, createdAt: new Date().toISOString() }, ...links]
+        };
       });
 
-      saveLinks(links);
-      resetForm();
-      renderLinks();
+      saveGroups(nextGroups);
+      resetLinkForm();
+      render();
     });
 
-    linkForm.addEventListener('reset', () => {
-      window.setTimeout(resetForm, 0);
-    });
+    groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
+    linkForm.addEventListener('reset', () => window.setTimeout(resetLinkForm, 0));
 
-    linksList.addEventListener('click', (event) => {
+    groupsList.addEventListener('click', (event) => {
       const copyValue = event.target.getAttribute('data-copy');
-      const deleteId = event.target.getAttribute('data-delete');
-      const editId = event.target.getAttribute('data-edit');
+      const editGroupId = event.target.getAttribute('data-edit-group');
+      const deleteGroupId = event.target.getAttribute('data-delete-group');
+      const editLinkId = event.target.getAttribute('data-edit-link');
+      const deleteLinkId = event.target.getAttribute('data-delete-link');
+      const groupId = event.target.getAttribute('data-group');
 
-      if (copyValue) {
-        copyText(copyValue, event.target);
+      if (copyValue) copyText(copyValue, event.target);
+
+      if (editGroupId) {
+        const group = getGroups().find((item) => item.id === editGroupId);
+        if (group) fillGroupForm(group);
       }
 
-      if (deleteId) {
-        const links = getLinks().filter((item) => item.id !== deleteId);
-        saveLinks(links);
-        if (editingId === deleteId) {
-          resetForm();
-        }
-        renderLinks();
+      if (deleteGroupId) {
+        saveGroups(getGroups().filter((group) => group.id !== deleteGroupId));
+        if (editingGroupId === deleteGroupId) resetGroupForm();
+        render();
       }
 
-      if (editId) {
-        const item = getLinks().find((link) => link.id === editId);
-        if (item) {
-          fillForm(item);
-        }
+      if (editLinkId && groupId) {
+        const group = getGroups().find((item) => item.id === groupId);
+        const link = group && (group.links || []).find((item) => item.id === editLinkId);
+        if (group && link) fillLinkForm(group, link);
+      }
+
+      if (deleteLinkId && groupId) {
+        saveGroups(getGroups().map((group) => group.id === groupId ? {
+          ...group,
+          links: (group.links || []).filter((link) => link.id !== deleteLinkId)
+        } : group));
+        if (editingLinkId === deleteLinkId) resetLinkForm();
+        render();
       }
     });
 

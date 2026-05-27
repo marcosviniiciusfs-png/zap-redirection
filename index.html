@@ -16,8 +16,11 @@
     const REDIRECT_DELAY  = 1200;
 
     const params = new URLSearchParams(window.location.search);
+    const GROUP_ID = params.get('gid') || 'default-group';
+    const GROUP_NAME = params.get('gname') || 'Grupo padrão';
     const LINK_ID = params.get('lid') || 'default';
-    const PROJECT_NAME = params.get('name') || 'Link padrão';
+    const PROJECT_NAME = params.get('name') || params.get('campaign') || 'Link padrão';
+    const CAMPAIGN_NAME = params.get('campaign') || PROJECT_NAME;
     const ACTIVE_PIXEL_ID = params.get('px') || PIXEL_ID;
     const ACTIVE_WHATSAPP_NUMBER = (params.get('n') || WHATSAPP_NUMBER).replace(/\D/g, '');
     const ACTIVE_WHATSAPP_MSG = params.get('msg') || WHATSAPP_MSG;
@@ -28,6 +31,9 @@
     const pixelData = {
       content_name: PROJECT_NAME,
       content_category: 'whatsapp_redirect',
+      group_id: GROUP_ID,
+      group_name: GROUP_NAME,
+      campaign_name: CAMPAIGN_NAME,
       link_id: LINK_ID
     };
 
@@ -333,8 +339,11 @@
         event_id: eventId,
         event_source_url: window.location.href,
         pixel_id: ACTIVE_PIXEL_ID,
+        group_id: GROUP_ID,
+        group_name: GROUP_NAME,
         link_id: LINK_ID,
         project_name: PROJECT_NAME,
+        campaign_name: CAMPAIGN_NAME,
         content_category: 'whatsapp_redirect',
         user_agent: navigator.userAgent
       };
