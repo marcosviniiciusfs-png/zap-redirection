@@ -218,12 +218,21 @@
     }
 
     .modal {
+      position: relative;
+      z-index: 1;
       width: min(100%, 480px);
       padding: 22px;
       background: var(--panel);
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 8px;
       box-shadow: var(--shadow);
+    }
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+      pointer-events: auto;
+      user-select: text;
     }
 
     @media (max-width: 900px) {
@@ -325,7 +334,7 @@
       <h2 id="linkFormTitle">Novo link</h2>
       <div class="form-grid">
         <label>Grupo <select id="linkGroup" required></select></label>
-        <label>Nome da campanha/link <input id="linkName" placeholder="Ex: Botox - Story 01" required></label>
+        <label>Nome da campanha/link <input id="linkName" type="text" autocomplete="off" placeholder="Ex: Botox - Story 01" required></label>
         <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
       </div>
       <div class="actions">
@@ -768,10 +777,14 @@
     function startLinkForGroup(group) {
       resetLinkForm();
       linkGroup.value = group.id;
+      document.getElementById('linkName').disabled = false;
+      document.getElementById('linkName').readOnly = false;
+      document.getElementById('linkMessage').disabled = false;
+      document.getElementById('linkMessage').readOnly = false;
       linkFormTitle.textContent = `Novo link em: ${group.name}`;
       linkStatus.textContent = 'Crie uma nova mensagem/campanha para este grupo.';
       linkModal.classList.remove('hidden');
-      document.getElementById('linkName').focus();
+      window.requestAnimationFrame(() => document.getElementById('linkName').focus());
     }
 
     function fillLinkForm(group, link) {
@@ -779,11 +792,15 @@
       linkGroup.value = group.id;
       document.getElementById('linkName').value = link.name;
       document.getElementById('linkMessage').value = link.message;
+      document.getElementById('linkName').disabled = false;
+      document.getElementById('linkName').readOnly = false;
+      document.getElementById('linkMessage').disabled = false;
+      document.getElementById('linkMessage').readOnly = false;
       linkFormTitle.textContent = `Editando link: ${link.name}`;
       linkSubmitBtn.textContent = 'Salvar link';
       linkStatus.textContent = 'Altere a campanha ou mensagem e clique em Salvar link.';
       linkModal.classList.remove('hidden');
-      document.getElementById('linkName').focus();
+      window.requestAnimationFrame(() => document.getElementById('linkName').focus());
     }
 
     loginForm.addEventListener('submit', async (event) => {
@@ -959,12 +976,16 @@
 
     groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
     closeEditGroupBtn.addEventListener('click', closeEditGroupModal);
+    editGroupForm.addEventListener('pointerdown', (event) => event.stopPropagation());
+    editGroupForm.addEventListener('click', (event) => event.stopPropagation());
     editGroupModal.addEventListener('click', (event) => {
       if (event.target === editGroupModal) {
         closeEditGroupModal();
       }
     });
     closeLinkBtn.addEventListener('click', closeLinkModal);
+    linkForm.addEventListener('pointerdown', (event) => event.stopPropagation());
+    linkForm.addEventListener('click', (event) => event.stopPropagation());
     linkModal.addEventListener('click', (event) => {
       if (event.target === linkModal) {
         closeLinkModal();
