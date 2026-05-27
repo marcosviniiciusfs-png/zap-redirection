@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dashboard de Links WhatsApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F5F0E8;
+      --panel: #FDFAF4;
+      --ink: #241F1A;
+      --muted: #71695F;
+      --line: rgba(36, 31, 26, 0.12);
+      --green: #25D366;
+      --green-dark: #128C7E;
+      --danger: #A43C2F;
+      --shadow: 0 20px 60px rgba(36, 31, 26, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E"),
+        var(--bg);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .screen {
+      min-height: 100vh;
+      padding: 22px;
+    }
+
+    .login-wrap {
+      display: grid;
+      place-items: center;
+    }
+
+    .login-card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-card {
+      width: min(100%, 430px);
+      padding: 34px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.05rem, 6vw, 3rem);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--ink);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 13px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--green-dark);
+      box-shadow: 0 0 0 4px rgba(18, 140, 126, 0.13);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    .btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 700;
+      background: var(--green-dark);
+    }
+
+    .btn:hover {
+      background: #0f766a;
+    }
+
+    .btn.secondary {
+      color: var(--ink);
+      background: rgba(245, 240, 232, 0.72);
+      border-color: var(--line);
+    }
+
+    .btn.secondary:hover {
+      background: #efe7da;
+    }
+
+    .btn.danger {
+      color: var(--danger);
+      background: #fff;
+      border-color: rgba(164, 60, 47, 0.28);
+    }
+
+    .btn.danger:hover {
+      background: rgba(164, 60, 47, 0.08);
+    }
+
+    .error {
+      min-height: 22px;
+      margin-top: 12px;
+      color: var(--danger);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .topbar p {
+      max-width: 690px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 94px;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.76);
+      border-radius: 8px;
+      box-shadow: 0 12px 34px rgba(36, 31, 26, 0.08);
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 14px;
+      color: #3C352D;
+      background: rgba(37, 211, 102, 0.12);
+      border: 1px solid rgba(18, 140, 126, 0.2);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .links {
+      display: grid;
+      gap: 12px;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+    }
+
+    .link-row {
+      display: grid;
+      gap: 12px;
+      padding: 15px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .link-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 9px;
+      color: var(--green-dark);
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(37, 211, 102, 0.13);
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .url-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .url-box input {
+      font-size: 0.86rem;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 860px) {
+      .grid,
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .url-box {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .screen {
+        padding: 14px;
+      }
+
+      .login-card,
+      .panel {
+        padding: 18px;
+      }
+
+      .actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="screen login-wrap" id="loginScreen">
+    <form class="login-card" id="loginForm">
+      <h1>Dashboard</h1>
+      <p>Entre para criar links de redirecionamento com Pixel e mensagem personalizada.</p>
+      <div class="form-grid" style="margin-top: 22px;">
+        <label>
+          E-mail
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>
+          Senha
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">Entrar</button>
+      </div>
+      <p class="error" id="loginError"></p>
+    </form>
+  </section>
+
+  <section class="screen app hidden" id="appScreen">
+    <header class="topbar">
+      <div>
+        <h1>Links de WhatsApp</h1>
+        <p>Crie links por cliente, campanha ou projeto. Cada link envia parâmetros próprios para o Pixel e abre o WhatsApp com a mensagem definida.</p>
+      </div>
+      <button class="btn secondary" type="button" id="logoutBtn">Sair</button>
+    </header>
+
+    <div class="metrics">
+      <div class="metric">
+        <strong id="totalLinks">0</strong>
+        <span>Links criados neste navegador.</span>
+      </div>
+      <div class="metric">
+        <strong>Lead</strong>
+        <span>Evento enviado assim que a página de redirecionamento carrega.</span>
+      </div>
+      <div class="metric">
+        <strong>Contact</strong>
+        <span>Evento enviado instantes antes do envio para o WhatsApp.</span>
+      </div>
+    </div>
+
+    <div class="notice">
+      Para conversão personalizada na Meta, use o evento <strong>Lead</strong> ou <strong>Contact</strong> filtrando por URL que contém <strong>lid=</strong> ou pelo parâmetro <strong>content_name</strong> do projeto. A diferença entre Lead e Contact indica pessoas que carregaram a página, mas não chegaram ao redirecionamento.
+    </div>
+
+    <div class="grid">
+      <form class="panel" id="linkForm">
+        <h2>Novo link</h2>
+        <div class="form-grid">
+          <label>
+            Nome do projeto
+            <input id="projectName" placeholder="Clínica Renova" required>
+          </label>
+          <label>
+            Número do WhatsApp
+            <input id="whatsappNumber" inputmode="numeric" placeholder="5594991031837" required>
+          </label>
+          <label>
+            Mensagem personalizada
+            <textarea id="whatsappMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea>
+          </label>
+          <label>
+            Pixel ID
+            <input id="pixelId" placeholder="Opcional: usa o Pixel padrão se ficar vazio">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn" type="submit">Criar link</button>
+          <button class="btn secondary" type="reset">Limpar</button>
+        </div>
+      </form>
+
+      <section class="panel">
+        <h2>Links criados</h2>
+        <div class="links" id="linksList"></div>
+      </section>
+    </div>
+  </section>
+
+  <script>
+    const ADMIN_EMAIL = 'admin@dimensao.com';
+    const ADMIN_PASSWORD = '123456';
+    const STORAGE_KEY = 'zap_redirect_links_v1';
+    const SESSION_KEY = 'zap_redirect_logged_v1';
+
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const linkForm = document.getElementById('linkForm');
+    const linksList = document.getElementById('linksList');
+    const totalLinks = document.getElementById('totalLinks');
+
+    function slugify(value) {
+      return value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 54) || 'link';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getLinks() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveLinks(links) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
+    }
+
+    function showApp() {
+      loginScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
+      renderLinks();
+    }
+
+    function showLogin() {
+      appScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+    }
+
+    function buildLink(item) {
+      const url = new URL('index.html', window.location.href);
+      url.searchParams.set('lid', item.id);
+      url.searchParams.set('name', item.name);
+      url.searchParams.set('n', item.number);
+      url.searchParams.set('msg', item.message);
+      if (item.pixelId) {
+        url.searchParams.set('px', item.pixelId);
+      }
+      return url.href;
+    }
+
+    async function copyText(text, button) {
+      await navigator.clipboard.writeText(text);
+      const original = button.textContent;
+      button.textContent = 'Copiado';
+      window.setTimeout(() => {
+        button.textContent = original;
+      }, 1400);
+    }
+
+    function renderLinks() {
+      const links = getLinks();
+      totalLinks.textContent = links.length;
+
+      if (!links.length) {
+        linksList.innerHTML = '<div class="empty"><p>Nenhum link criado ainda.</p></div>';
+        return;
+      }
+
+      linksList.innerHTML = links.map((item) => {
+        const url = buildLink(item);
+        const safeUrl = escapeHtml(url);
+        return `
+          <article class="link-row" data-id="${item.id}">
+            <div class="link-head">
+              <div>
+                <h3>${escapeHtml(item.name)}</h3>
+                <div class="meta">
+                  <span>${escapeHtml(item.number)}</span>
+                  <span>lid=${escapeHtml(item.id)}</span>
+                </div>
+              </div>
+              <span class="pill">${item.pixelId ? 'Pixel próprio' : 'Pixel padrão'}</span>
+            </div>
+            <div class="url-box">
+              <input readonly value="${safeUrl}">
+              <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
+            </div>
+            <p>${escapeHtml(item.message)}</p>
+            <div class="actions" style="margin-top: 0;">
+              <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+              <button class="btn danger" type="button" data-delete="${escapeHtml(item.id)}">Excluir</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        loginError.textContent = '';
+        showApp();
+        return;
+      }
+
+      loginError.textContent = 'E-mail ou senha inválidos.';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      showLogin();
+    });
+
+    linkForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = document.getElementById('projectName').value.trim();
+      const number = document.getElementById('whatsappNumber').value.replace(/\D/g, '');
+      const message = document.getElementById('whatsappMessage').value.trim();
+      const pixelId = document.getElementById('pixelId').value.trim();
+      const links = getLinks();
+
+      if (!name || !number || !message) {
+        return;
+      }
+
+      const baseId = slugify(name);
+      const duplicateCount = links.filter((item) => item.id.startsWith(baseId)).length;
+      const id = duplicateCount ? `${baseId}-${duplicateCount + 1}` : baseId;
+
+      links.unshift({
+        id,
+        name,
+        number,
+        message,
+        pixelId,
+        createdAt: new Date().toISOString()
+      });
+
+      saveLinks(links);
+      linkForm.reset();
+      document.getElementById('whatsappMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      renderLinks();
+    });
+
+    linksList.addEventListener('click', (event) => {
+      const copyValue = event.target.getAttribute('data-copy');
+      const deleteId = event.target.getAttribute('data-delete');
+
+      if (copyValue) {
+        copyText(copyValue, event.target);
+      }
+
+      if (deleteId) {
+        const links = getLinks().filter((item) => item.id !== deleteId);
+        saveLinks(links);
+        renderLinks();
+      }
+    });
+
+    if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+      showApp();
+    }
+  </script>
+</body>
+</html>
