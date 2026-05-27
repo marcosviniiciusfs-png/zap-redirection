@@ -290,19 +290,10 @@
           <p class="status-line" id="groupStatus"></p>
         </form>
 
-        <form class="panel" id="linkForm">
-          <h2 id="linkFormTitle">Novo link</h2>
-          <div class="form-grid">
-            <label>Grupo <select id="linkGroup" required></select></label>
-            <label>Nome da campanha/link <input id="linkName" placeholder="Ex: Botox - Story 01" required></label>
-            <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
-          </div>
-          <div class="actions">
-            <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
-            <button class="btn secondary" type="reset" id="linkResetBtn">Limpar</button>
-          </div>
-          <p class="status-line" id="linkStatus"></p>
-        </form>
+        <section class="panel">
+          <h2>Links</h2>
+          <p>Use o botão Adicionar link dentro de cada grupo para criar mensagens específicas por campanha.</p>
+        </section>
       </div>
 
       <section class="panel">
@@ -329,6 +320,22 @@
     </form>
   </section>
 
+  <section class="modal-backdrop hidden" id="linkModal" aria-modal="true" role="dialog" aria-labelledby="linkFormTitle">
+    <form class="modal" id="linkForm">
+      <h2 id="linkFormTitle">Novo link</h2>
+      <div class="form-grid">
+        <label>Grupo <select id="linkGroup" required></select></label>
+        <label>Nome da campanha/link <input id="linkName" placeholder="Ex: Botox - Story 01" required></label>
+        <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
+        <button class="btn secondary" type="button" id="closeLinkBtn">Cancelar</button>
+      </div>
+      <p class="status-line" id="linkStatus"></p>
+    </form>
+  </section>
+
   <script>
     const ADMIN_EMAIL = 'hurtzgestao@gmail.com';
     const ADMIN_PASSWORD = 'NovoRei@01Hurtz';
@@ -349,7 +356,9 @@
     const editGroupForm = document.getElementById('editGroupForm');
     const closeEditGroupBtn = document.getElementById('closeEditGroupBtn');
     const editGroupStatus = document.getElementById('editGroupStatus');
+    const linkModal = document.getElementById('linkModal');
     const linkForm = document.getElementById('linkForm');
+    const closeLinkBtn = document.getElementById('closeLinkBtn');
     const groupsList = document.getElementById('groupsList');
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
@@ -362,7 +371,6 @@
     const groupSubmitBtn = document.getElementById('groupSubmitBtn');
     const groupResetBtn = document.getElementById('groupResetBtn');
     const linkSubmitBtn = document.getElementById('linkSubmitBtn');
-    const linkResetBtn = document.getElementById('linkResetBtn');
 
     let editingGroupId = null;
     let editingGroupDbId = null;
@@ -648,8 +656,12 @@
       document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
       linkFormTitle.textContent = 'Novo link';
       linkSubmitBtn.textContent = 'Criar link';
-      linkResetBtn.textContent = 'Limpar';
       linkStatus.textContent = '';
+    }
+
+    function closeLinkModal() {
+      resetLinkForm();
+      linkModal.classList.add('hidden');
     }
 
     function renderSelect(groups) {
@@ -758,7 +770,7 @@
       linkGroup.value = group.id;
       linkFormTitle.textContent = `Novo link em: ${group.name}`;
       linkStatus.textContent = 'Crie uma nova mensagem/campanha para este grupo.';
-      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      linkModal.classList.remove('hidden');
       document.getElementById('linkName').focus();
     }
 
@@ -769,9 +781,9 @@
       document.getElementById('linkMessage').value = link.message;
       linkFormTitle.textContent = `Editando link: ${link.name}`;
       linkSubmitBtn.textContent = 'Salvar link';
-      linkResetBtn.textContent = 'Cancelar';
       linkStatus.textContent = 'Altere a campanha ou mensagem e clique em Salvar link.';
-      linkForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      linkModal.classList.remove('hidden');
+      document.getElementById('linkName').focus();
     }
 
     loginForm.addEventListener('submit', async (event) => {
@@ -892,6 +904,7 @@
         }
 
         resetLinkForm();
+        closeLinkModal();
         await render();
         return;
       }
@@ -940,16 +953,21 @@
       });
 
       saveGroups(nextGroups);
-      resetLinkForm();
+      closeLinkModal();
       await render();
     });
 
     groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
-    linkForm.addEventListener('reset', () => window.setTimeout(resetLinkForm, 0));
     closeEditGroupBtn.addEventListener('click', closeEditGroupModal);
     editGroupModal.addEventListener('click', (event) => {
       if (event.target === editGroupModal) {
         closeEditGroupModal();
+      }
+    });
+    closeLinkBtn.addEventListener('click', closeLinkModal);
+    linkModal.addEventListener('click', (event) => {
+      if (event.target === linkModal) {
+        closeLinkModal();
       }
     });
 
