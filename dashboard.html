@@ -260,7 +260,7 @@
           <h2 id="groupFormTitle">Novo grupo</h2>
           <div class="form-grid">
             <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
-            <label>Número do WhatsApp <input id="groupNumber" inputmode="numeric" placeholder="5594991031837" required></label>
+            <label>Número do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
             <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
             <label>Endpoint da API de Conversões <input id="groupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
           </div>
@@ -325,6 +325,7 @@
     const linkResetBtn = document.getElementById('linkResetBtn');
 
     let editingGroupId = null;
+    let editingGroupDbId = null;
     let editingLinkId = null;
     let supabaseSession = readJson(SUPABASE_SESSION_KEY) || null;
     let dataMode = 'Local';
@@ -587,6 +588,7 @@
 
     function resetGroupForm() {
       editingGroupId = null;
+      editingGroupDbId = null;
       groupForm.reset();
       groupFormTitle.textContent = 'Novo grupo';
       groupSubmitBtn.textContent = 'Criar grupo';
@@ -694,6 +696,7 @@
 
     function fillGroupForm(group) {
       editingGroupId = group.id;
+      editingGroupDbId = group.dbId || null;
       document.getElementById('groupName').value = group.name;
       document.getElementById('groupNumber').value = group.number;
       document.getElementById('groupPixel').value = group.pixelId || '';
@@ -766,7 +769,10 @@
       const pixelId = document.getElementById('groupPixel').value.trim();
       const capiEndpoint = document.getElementById('groupCapi').value.trim();
 
-      if (!name || !number) return;
+      if (!name || !number) {
+        groupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        return;
+      }
 
       if (editingGroupId) {
         const updatedGroup = {
@@ -777,7 +783,12 @@
         };
 
         if (isSupabaseActive()) {
-          const currentGroup = groups.find((group) => group.id === editingGroupId);
+          const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
+          if (!currentGroup) {
+            groupStatus.textContent = 'Não encontrei este grupo para salvar. Recarregue a página e tente novamente.';
+            return;
+          }
+
           await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
         } else {
           saveGroups(groups.map((group) => group.id === editingGroupId ? {
