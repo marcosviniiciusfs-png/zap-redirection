@@ -207,6 +207,25 @@
     .url-box input { font-size: 0.86rem; }
     .hidden { display: none !important; }
 
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(36, 31, 26, 0.34);
+    }
+
+    .modal {
+      width: min(100%, 480px);
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
     @media (max-width: 900px) {
       .grid, .metrics { grid-template-columns: 1fr; }
       .topbar { align-items: flex-start; flex-direction: column; }
@@ -293,6 +312,23 @@
     </div>
   </section>
 
+  <section class="modal-backdrop hidden" id="editGroupModal" aria-modal="true" role="dialog" aria-labelledby="editGroupTitle">
+    <form class="modal" id="editGroupForm">
+      <h2 id="editGroupTitle">Editar grupo</h2>
+      <div class="form-grid">
+        <label>Nome do grupo <input id="editGroupName" required></label>
+        <label>Número do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
+        <label>Pixel ID <input id="editGroupPixel" placeholder="Pixel usado neste grupo"></label>
+        <label>Endpoint da API de Conversões <input id="editGroupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">Salvar grupo</button>
+        <button class="btn secondary" type="button" id="closeEditGroupBtn">Cancelar</button>
+      </div>
+      <p class="status-line" id="editGroupStatus"></p>
+    </form>
+  </section>
+
   <script>
     const ADMIN_EMAIL = 'hurtzgestao@gmail.com';
     const ADMIN_PASSWORD = 'NovoRei@01Hurtz';
@@ -309,6 +345,10 @@
     const loginError = document.getElementById('loginError');
     const logoutBtn = document.getElementById('logoutBtn');
     const groupForm = document.getElementById('groupForm');
+    const editGroupModal = document.getElementById('editGroupModal');
+    const editGroupForm = document.getElementById('editGroupForm');
+    const closeEditGroupBtn = document.getElementById('closeEditGroupBtn');
+    const editGroupStatus = document.getElementById('editGroupStatus');
     const linkForm = document.getElementById('linkForm');
     const groupsList = document.getElementById('groupsList');
     const linkGroup = document.getElementById('linkGroup');
@@ -587,13 +627,19 @@
     }
 
     function resetGroupForm() {
-      editingGroupId = null;
-      editingGroupDbId = null;
       groupForm.reset();
       groupFormTitle.textContent = 'Novo grupo';
       groupSubmitBtn.textContent = 'Criar grupo';
       groupResetBtn.textContent = 'Limpar';
       groupStatus.textContent = '';
+    }
+
+    function closeEditGroupModal() {
+      editingGroupId = null;
+      editingGroupDbId = null;
+      editGroupForm.reset();
+      editGroupStatus.textContent = '';
+      editGroupModal.classList.add('hidden');
     }
 
     function resetLinkForm() {
@@ -697,15 +743,14 @@
     function fillGroupForm(group) {
       editingGroupId = group.id;
       editingGroupDbId = group.dbId || null;
-      document.getElementById('groupName').value = group.name;
-      document.getElementById('groupNumber').value = group.number;
-      document.getElementById('groupPixel').value = group.pixelId || '';
-      document.getElementById('groupCapi').value = group.capiEndpoint || '';
-      groupFormTitle.textContent = `Editando grupo: ${group.name}`;
-      groupSubmitBtn.textContent = 'Salvar grupo';
-      groupResetBtn.textContent = 'Cancelar';
-      groupStatus.textContent = 'Altere os dados e clique em Salvar grupo.';
-      groupForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('editGroupName').value = group.name;
+      document.getElementById('editGroupNumber').value = group.number;
+      document.getElementById('editGroupPixel').value = group.pixelId || '';
+      document.getElementById('editGroupCapi').value = group.capiEndpoint || '';
+      document.getElementById('editGroupTitle').textContent = `Editar grupo: ${group.name}`;
+      editGroupStatus.textContent = '';
+      editGroupModal.classList.remove('hidden');
+      document.getElementById('editGroupNumber').focus();
     }
 
     function startLinkForGroup(group) {
@@ -774,42 +819,52 @@
         return;
       }
 
-      if (editingGroupId) {
-        const updatedGroup = {
-          name,
-          number,
-          pixelId,
-          capiEndpoint
-        };
+      const id = uniqueId(slugify(name), groups);
+      const newGroup = { id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() };
 
-        if (isSupabaseActive()) {
-          const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
-          if (!currentGroup) {
-            groupStatus.textContent = 'Não encontrei este grupo para salvar. Recarregue a página e tente novamente.';
-            return;
-          }
-
-          await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
-        } else {
-          saveGroups(groups.map((group) => group.id === editingGroupId ? {
-            ...group,
-            ...updatedGroup,
-            updatedAt: new Date().toISOString()
-          } : group));
-        }
+      if (isSupabaseActive()) {
+        await createSupabaseGroup(newGroup);
       } else {
-        const id = uniqueId(slugify(name), groups);
-        const newGroup = { id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() };
-
-        if (isSupabaseActive()) {
-          await createSupabaseGroup(newGroup);
-        } else {
-          groups.unshift(newGroup);
-          saveGroups(groups);
-        }
+        groups.unshift(newGroup);
+        saveGroups(groups);
       }
 
       resetGroupForm();
+      await render();
+    });
+
+    editGroupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const groups = await getAllGroups();
+      const name = document.getElementById('editGroupName').value.trim();
+      const number = document.getElementById('editGroupNumber').value.replace(/\D/g, '');
+      const pixelId = document.getElementById('editGroupPixel').value.trim();
+      const capiEndpoint = document.getElementById('editGroupCapi').value.trim();
+
+      if (!editingGroupId || !name || !number) {
+        editGroupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        return;
+      }
+
+      const updatedGroup = { name, number, pixelId, capiEndpoint };
+
+      if (isSupabaseActive()) {
+        const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
+        if (!currentGroup) {
+          editGroupStatus.textContent = 'Não encontrei este grupo para salvar. Recarregue a página e tente novamente.';
+          return;
+        }
+
+        await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
+      } else {
+        saveGroups(groups.map((group) => group.id === editingGroupId ? {
+          ...group,
+          ...updatedGroup,
+          updatedAt: new Date().toISOString()
+        } : group));
+      }
+
+      closeEditGroupModal();
       await render();
     });
 
@@ -891,6 +946,12 @@
 
     groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
     linkForm.addEventListener('reset', () => window.setTimeout(resetLinkForm, 0));
+    closeEditGroupBtn.addEventListener('click', closeEditGroupModal);
+    editGroupModal.addEventListener('click', (event) => {
+      if (event.target === editGroupModal) {
+        closeEditGroupModal();
+      }
+    });
 
     groupsList.addEventListener('click', async (event) => {
       const copyValue = event.target.getAttribute('data-copy');
@@ -924,6 +985,7 @@
         }
 
         if (editingGroupId === deleteGroupId) resetGroupForm();
+        if (editingGroupId === deleteGroupId) closeEditGroupModal();
         await render();
       }
 
