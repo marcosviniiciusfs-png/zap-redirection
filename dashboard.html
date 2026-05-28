@@ -619,7 +619,7 @@
     }
 
     function buildLink(group, link) {
-      const url = new URL('index.html', window.location.href);
+      const url = new URL('redirect-whatsapp.html', window.location.href);
       url.searchParams.set('gid', group.id);
       url.searchParams.set('gname', group.name);
       url.searchParams.set('lid', link.id);

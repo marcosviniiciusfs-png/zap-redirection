@@ -4,383 +4,1058 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Conectando ao WhatsApp</title>
+  <title>Dashboard de Links WhatsApp</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,50,0&display=swap" rel="stylesheet">
-
-  <script>
-    const PIXEL_ID        = 'SEU_PIXEL_ID';
-    const WHATSAPP_NUMBER = '5594991031837';
-    const WHATSAPP_MSG    = 'Olá! Vi o anúncio e quero saber mais.';
-    const REDIRECT_DELAY  = 1200;
-
-    const params = new URLSearchParams(window.location.search);
-    const GROUP_ID = params.get('gid') || 'default-group';
-    const GROUP_NAME = params.get('gname') || 'Grupo padrão';
-    const LINK_ID = params.get('lid') || 'default';
-    const PROJECT_NAME = params.get('name') || params.get('campaign') || 'Link padrão';
-    const CAMPAIGN_NAME = params.get('campaign') || PROJECT_NAME;
-    const ACTIVE_PIXEL_ID = params.get('px') || PIXEL_ID;
-    const ACTIVE_WHATSAPP_NUMBER = (params.get('n') || WHATSAPP_NUMBER).replace(/\D/g, '');
-    const ACTIVE_WHATSAPP_MSG = params.get('msg') || WHATSAPP_MSG;
-    const CAPI_ENDPOINT = params.get('capi') || '';
-    const LEAD_EVENT_ID = `${LINK_ID}-lead-${Date.now()}`;
-    const CONTACT_EVENT_ID = `${LINK_ID}-contact-${Date.now()}`;
-
-    const pixelData = {
-      content_name: PROJECT_NAME,
-      content_category: 'whatsapp_redirect',
-      group_id: GROUP_ID,
-      group_name: GROUP_NAME,
-      campaign_name: CAMPAIGN_NAME,
-      link_id: LINK_ID
-    };
-
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', ACTIVE_PIXEL_ID);
-    fbq('track', 'Lead', pixelData, { eventID: LEAD_EVENT_ID });
-  </script>
-
-  <noscript>
-    <img height="1" width="1" style="display:none" alt=""
-      src="https://www.facebook.com/tr?id=SEU_PIXEL_ID&ev=Lead&noscript=1">
-  </noscript>
-
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #F5F0E8;
-      --card: #FDFAF4;
-      --green: #25D366;
-      --green-dark: #128C7E;
+      --panel: #FDFAF4;
       --ink: #241F1A;
       --muted: #71695F;
       --line: rgba(36, 31, 26, 0.12);
-      --shadow: 0 24px 70px rgba(36, 31, 26, 0.12);
+      --green: #25D366;
+      --green-dark: #128C7E;
+      --danger: #A43C2F;
+      --shadow: 0 20px 60px rgba(36, 31, 26, 0.11);
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      min-height: 100%;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
       color: var(--ink);
       font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E"),
         var(--bg);
-      overflow-x: hidden;
     }
 
-    main {
-      width: min(100%, 500px);
-    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
 
-    .card {
-      width: 100%;
-      padding: clamp(28px, 7vw, 46px);
-      text-align: center;
-      background: var(--card);
-      border: 1px solid rgba(255, 255, 255, 0.7);
+    .screen { min-height: 100vh; padding: 22px; }
+    .login-wrap { display: grid; place-items: center; }
+    .app { max-width: 1220px; margin: 0 auto; }
+
+    .login-card, .panel, .metric {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.76);
       border-radius: 8px;
       box-shadow: var(--shadow);
-      animation: enter 720ms cubic-bezier(.2, .8, .2, 1) both;
     }
 
-    .whatsapp-orb {
-      width: 88px;
-      height: 88px;
-      margin: 0 auto 26px;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      background: linear-gradient(145deg, var(--green), var(--green-dark));
-      border-radius: 50%;
-      box-shadow: 0 16px 36px rgba(37, 211, 102, 0.32);
-      animation: pulse 1800ms ease-in-out infinite;
-    }
+    .login-card { width: min(100%, 430px); padding: 34px; }
+    .panel { padding: 22px; }
 
-    .whatsapp-orb svg {
-      width: 48px;
-      height: 48px;
-      display: block;
-    }
-
-    h1 {
-      max-width: 420px;
-      margin: 0 auto 14px;
+    h1, h2, h3 {
+      margin: 0;
       font-family: "Fraunces", Georgia, serif;
-      font-size: clamp(2.15rem, 7vw, 3.25rem);
-      line-height: 0.98;
       font-weight: 600;
       letter-spacing: 0;
     }
 
-    h1 em {
-      color: var(--green-dark);
-      font-style: italic;
-    }
+    h1 { font-size: clamp(2.05rem, 6vw, 3rem); line-height: 1; margin-bottom: 12px; }
+    h2 { font-size: 1.35rem; margin-bottom: 16px; }
+    h3 { font-size: 1.12rem; }
+    p { margin: 0; color: var(--muted); line-height: 1.5; }
 
-    .subtitle {
-      max-width: 390px;
-      margin: 0 auto 30px;
-      color: var(--muted);
-      font-size: clamp(0.96rem, 2.8vw, 1.04rem);
-      line-height: 1.55;
-    }
-
-    .progress-area {
-      text-align: left;
-    }
-
-    .status {
-      min-height: 24px;
-      margin: 0 0 12px;
-      color: var(--green-dark);
-      font-size: 0.92rem;
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--ink);
+      font-size: 0.88rem;
       font-weight: 700;
     }
 
-    .progress-track {
-      position: relative;
-      height: 10px;
-      overflow: hidden;
-      background: rgba(18, 140, 126, 0.12);
-      border-radius: 999px;
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 13px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
     }
 
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, var(--green), var(--green-dark));
-      border-radius: inherit;
-      transition: width 260ms cubic-bezier(.2, .8, .2, 1);
+    textarea { min-height: 92px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--green-dark);
+      box-shadow: 0 0 0 4px rgba(18, 140, 126, 0.13);
     }
 
-    .progress-steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .step {
-      height: 6px;
-      background: rgba(18, 140, 126, 0.13);
-      border-radius: 999px;
-      transition: background-color 220ms ease;
-    }
-
-    .step.active {
-      background: var(--green);
-    }
-
-    .badges {
+    .topbar {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 9px;
-      margin: 32px 0 0;
-      padding: 0;
-      list-style: none;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 20px;
     }
 
-    .badges li {
-      min-height: 34px;
+    .topbar p { max-width: 760px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric { min-height: 94px; padding: 16px; box-shadow: 0 12px 34px rgba(36, 31, 26, 0.08); }
+    .metric strong { display: block; font-size: 1.65rem; line-height: 1; margin-bottom: 8px; }
+    .metric span { color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 14px;
+      color: #3C352D;
+      background: rgba(37, 211, 102, 0.12);
+      border: 1px solid rgba(18, 140, 126, 0.2);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(310px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .forms { display: grid; gap: 18px; }
+    .form-grid { display: grid; gap: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+
+    .btn {
+      min-height: 42px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 11px;
-      color: var(--ink);
-      font-size: 0.82rem;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #fff;
       font-weight: 700;
-      white-space: nowrap;
-      background: rgba(245, 240, 232, 0.78);
+      text-decoration: none;
+      background: var(--green-dark);
+    }
+
+    .btn:hover { background: #0f766a; }
+    .btn.secondary { color: var(--ink); background: rgba(245, 240, 232, 0.72); border-color: var(--line); }
+    .btn.secondary:hover { background: #efe7da; }
+    .btn.danger { color: var(--danger); background: #fff; border-color: rgba(164, 60, 47, 0.28); }
+    .btn.danger:hover { background: rgba(164, 60, 47, 0.08); }
+
+    .error { min-height: 22px; margin-top: 12px; color: var(--danger); font-size: 0.9rem; font-weight: 700; }
+    .status-line { min-height: 22px; margin-top: 12px; color: var(--green-dark); font-size: 0.9rem; font-weight: 700; }
+    .groups { display: grid; gap: 14px; }
+    .empty { padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 8px; }
+
+    .group-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      background: #fff;
       border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .group-head, .link-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 9px;
+      color: var(--green-dark);
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(37, 211, 102, 0.13);
       border-radius: 999px;
+      white-space: nowrap;
     }
 
-    @keyframes enter {
-      from {
-        opacity: 0;
-        transform: translateY(22px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .link-row {
+      display: grid;
+      gap: 10px;
+      padding: 13px;
+      background: rgba(245, 240, 232, 0.45);
+      border: 1px solid var(--line);
+      border-radius: 8px;
     }
 
-    @keyframes pulse {
-      0%,
-      100% {
-        transform: scale(1);
-        box-shadow: 0 16px 36px rgba(37, 211, 102, 0.32);
-      }
-      50% {
-        transform: scale(1.055);
-        box-shadow: 0 20px 48px rgba(37, 211, 102, 0.43);
-      }
+    .link-list { display: grid; gap: 10px; }
+    .url-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .url-box input { font-size: 0.86rem; }
+    .hidden { display: none !important; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(36, 31, 26, 0.34);
     }
 
-    @media (max-width: 430px) {
-      body {
-        padding: 18px;
-      }
+    .modal {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 480px);
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
 
-      .card {
-        padding: 28px 20px;
-      }
+    .modal input,
+    .modal select,
+    .modal textarea {
+      pointer-events: auto;
+      user-select: text;
+    }
 
-      .whatsapp-orb {
-        width: 76px;
-        height: 76px;
-        margin-bottom: 22px;
-      }
+    @media (max-width: 900px) {
+      .grid, .metrics { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .url-box { grid-template-columns: 1fr; }
+    }
 
-      .whatsapp-orb svg {
-        width: 42px;
-        height: 42px;
-      }
-
-      .badges {
-        gap: 7px;
-      }
-
-      .badges li {
-        width: 100%;
-      }
+    @media (max-width: 460px) {
+      .screen { padding: 14px; }
+      .login-card, .panel { padding: 18px; }
+      .actions .btn { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <section class="card" aria-label="Redirecionamento para WhatsApp">
-      <div class="whatsapp-orb" aria-hidden="true">
-        <svg viewBox="0 0 32 32" role="img" focusable="false" aria-hidden="true">
-          <path fill="currentColor" d="M16.02 3.2c-7.05 0-12.78 5.62-12.78 12.54 0 2.45.73 4.82 2.1 6.86L3.2 28.8l6.45-2.05a12.98 12.98 0 0 0 6.37 1.66c7.05 0 12.78-5.62 12.78-12.54S23.07 3.2 16.02 3.2Zm0 22.99c-2.05 0-4.03-.58-5.74-1.67l-.42-.27-3.73 1.19 1.22-3.53-.28-.44a10.13 10.13 0 0 1-1.61-5.48c0-5.69 4.74-10.32 10.56-10.32s10.56 4.63 10.56 10.32-4.74 10.2-10.56 10.2Zm5.8-7.64c-.32-.16-1.88-.91-2.17-1.02-.29-.11-.5-.16-.71.16-.21.31-.82 1.01-1 1.22-.18.21-.37.24-.69.08-.32-.16-1.35-.49-2.58-1.55-.95-.83-1.6-1.86-1.79-2.17-.18-.31-.02-.48.14-.64.14-.14.32-.37.48-.55.16-.18.21-.31.32-.52.11-.21.05-.39-.03-.55-.08-.16-.71-1.68-.98-2.3-.26-.6-.52-.52-.71-.53h-.61c-.21 0-.55.08-.84.39-.29.31-1.1 1.06-1.1 2.59s1.13 3.01 1.29 3.22c.16.21 2.23 3.34 5.4 4.68.75.32 1.34.51 1.8.65.76.24 1.45.21 1.99.13.61-.09 1.88-.75 2.14-1.47.26-.73.26-1.35.18-1.48-.08-.13-.29-.21-.61-.37Z"/>
-        </svg>
+  <section class="screen login-wrap" id="loginScreen">
+    <form class="login-card" id="loginForm">
+      <h1>Dashboard</h1>
+      <p>Entre para criar grupos e links de redirecionamento com Pixel, CAPI e mensagens personalizadas.</p>
+      <div class="form-grid" style="margin-top: 22px;">
+        <label>E-mail <input id="loginEmail" type="email" autocomplete="email" required></label>
+        <label>Senha <input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Entrar</button></div>
+      <p class="error" id="loginError"></p>
+    </form>
+  </section>
+
+  <section class="screen app hidden" id="appScreen">
+    <header class="topbar">
+      <div>
+        <h1>Grupos de WhatsApp</h1>
+        <p>Crie um grupo por cliente, número ou Pixel. Dentro de cada grupo, crie vários links com mensagens diferentes para campanhas e anúncios.</p>
+      </div>
+      <button class="btn secondary" type="button" id="logoutBtn">Sair</button>
+    </header>
+
+    <div class="metrics">
+      <div class="metric"><strong id="totalGroups">0</strong><span>Grupos criados neste navegador.</span></div>
+      <div class="metric"><strong id="totalLinks">0</strong><span>Links e mensagens personalizados.</span></div>
+      <div class="metric"><strong id="storageMode">Local</strong><span>Modo de armazenamento ativo.</span></div>
+      <div class="metric"><strong>lid</strong><span>Use o link para diferenciar campanhas e anúncios.</span></div>
+    </div>
+
+    <div class="notice">
+      Melhor prática: crie uma conversão personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vários links do mesmo número/cliente usam a mesma conversão, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
+    </div>
+
+    <div class="grid">
+      <div class="forms">
+        <form class="panel" id="groupForm">
+          <h2 id="groupFormTitle">Novo grupo</h2>
+          <div class="form-grid">
+            <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
+            <label>Número do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
+            <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
+            <label>Endpoint da API de Conversões <input id="groupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
+          </div>
+          <div class="actions">
+            <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
+            <button class="btn secondary" type="reset" id="groupResetBtn">Limpar</button>
+          </div>
+          <p class="status-line" id="groupStatus"></p>
+        </form>
+
+        <section class="panel">
+          <h2>Links</h2>
+          <p>Use o botão Adicionar link dentro de cada grupo para criar mensagens específicas por campanha.</p>
+        </section>
       </div>
 
-      <h1>Conectando você à nossa <em>atendente</em></h1>
-      <p class="subtitle">Identificamos seu interesse e estamos preparando um atendimento exclusivo para você.</p>
+      <section class="panel">
+        <h2>Grupos e links</h2>
+        <div class="groups" id="groupsList"></div>
+      </section>
+    </div>
+  </section>
 
-      <div class="progress-area" aria-live="polite">
-        <p class="status" id="statusText">Verificando disponibilidade...</p>
-        <div class="progress-track" aria-hidden="true">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="progress-steps" aria-hidden="true">
-          <span class="step active" id="stepOne"></span>
-          <span class="step" id="stepTwo"></span>
-          <span class="step" id="stepThree"></span>
-        </div>
+  <section class="modal-backdrop hidden" id="editGroupModal" aria-modal="true" role="dialog" aria-labelledby="editGroupTitle">
+    <form class="modal" id="editGroupForm">
+      <h2 id="editGroupTitle">Editar grupo</h2>
+      <div class="form-grid">
+        <label>Nome do grupo <input id="editGroupName" required></label>
+        <label>Número do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
+        <label>Pixel ID <input id="editGroupPixel" placeholder="Pixel usado neste grupo"></label>
+        <label>Endpoint da API de Conversões <input id="editGroupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
       </div>
+      <div class="actions">
+        <button class="btn" type="submit">Salvar grupo</button>
+        <button class="btn secondary" type="button" id="closeEditGroupBtn">Cancelar</button>
+      </div>
+      <p class="status-line" id="editGroupStatus"></p>
+    </form>
+  </section>
 
-      <ul class="badges" aria-label="Benefícios do atendimento">
-        <li>🔒 100% Seguro</li>
-        <li>⚡ Resposta Rápida</li>
-        <li>💬 Atendimento Humano</li>
-      </ul>
-    </section>
-  </main>
+  <section class="modal-backdrop hidden" id="linkModal" aria-modal="true" role="dialog" aria-labelledby="linkFormTitle">
+    <form class="modal" id="linkForm">
+      <h2 id="linkFormTitle">Novo link</h2>
+      <div class="form-grid">
+        <label>Grupo <select id="linkGroup" required></select></label>
+        <label>Nome da campanha/link <input id="linkName" type="text" autocomplete="off" placeholder="Ex: Botox - Story 01" required></label>
+        <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
+        <button class="btn secondary" type="button" id="closeLinkBtn">Cancelar</button>
+      </div>
+      <p class="status-line" id="linkStatus"></p>
+    </form>
+  </section>
 
   <script>
-    const statusText = document.getElementById('statusText');
-    const progressBar = document.getElementById('progressBar');
-    const steps = [
-      document.getElementById('stepOne'),
-      document.getElementById('stepTwo'),
-      document.getElementById('stepThree')
-    ];
+    const ADMIN_EMAIL = 'hurtzgestao@gmail.com';
+    const ADMIN_PASSWORD = 'NovoRei@01Hurtz';
+    const SUPABASE_URL = 'https://tmevdvduucsevmwhviii.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZXZkdmR1dWNzZXZtd2h2aWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTE2OTEsImV4cCI6MjA5NTQ2NzY5MX0._XN9c75xYf1gZztc51KC3m-jbvtNc9s1OCmgHkx2U-E';
+    const GROUPS_KEY = 'zap_redirect_groups_v2';
+    const LEGACY_LINKS_KEY = 'zap_redirect_links_v1';
+    const SESSION_KEY = 'zap_redirect_logged_v1';
+    const SUPABASE_SESSION_KEY = 'zap_redirect_supabase_session_v1';
 
-    const progressStates = [
-      { delay: 120, label: 'Verificando disponibilidade...', width: '34%', active: 1 },
-      { delay: Math.round(REDIRECT_DELAY * 0.36), label: 'Localizando atendente...', width: '67%', active: 2 },
-      { delay: Math.round(REDIRECT_DELAY * 0.68), label: 'Quase lá...', width: '100%', active: 3 }
-    ];
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const groupForm = document.getElementById('groupForm');
+    const editGroupModal = document.getElementById('editGroupModal');
+    const editGroupForm = document.getElementById('editGroupForm');
+    const closeEditGroupBtn = document.getElementById('closeEditGroupBtn');
+    const editGroupStatus = document.getElementById('editGroupStatus');
+    const linkModal = document.getElementById('linkModal');
+    const linkForm = document.getElementById('linkForm');
+    const closeLinkBtn = document.getElementById('closeLinkBtn');
+    const groupsList = document.getElementById('groupsList');
+    const linkGroup = document.getElementById('linkGroup');
+    const totalGroups = document.getElementById('totalGroups');
+    const totalLinks = document.getElementById('totalLinks');
+    const storageMode = document.getElementById('storageMode');
+    const groupFormTitle = document.getElementById('groupFormTitle');
+    const linkFormTitle = document.getElementById('linkFormTitle');
+    const groupStatus = document.getElementById('groupStatus');
+    const linkStatus = document.getElementById('linkStatus');
+    const groupSubmitBtn = document.getElementById('groupSubmitBtn');
+    const groupResetBtn = document.getElementById('groupResetBtn');
+    const linkSubmitBtn = document.getElementById('linkSubmitBtn');
 
-    function updateProgress(state) {
-      statusText.textContent = state.label;
-      progressBar.style.width = state.width;
-      steps.forEach((step, index) => {
-        step.classList.toggle('active', index < state.active);
+    let editingGroupId = null;
+    let editingGroupDbId = null;
+    let editingLinkId = null;
+    let supabaseSession = readJson(SUPABASE_SESSION_KEY) || null;
+    let dataMode = 'Local';
+
+    function slugify(value) {
+      return value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 54) || 'item';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function readJson(key) {
+      try { return JSON.parse(localStorage.getItem(key)) || []; }
+      catch (error) { return []; }
+    }
+
+    function isSupabaseActive() {
+      return Boolean(supabaseSession && supabaseSession.access_token);
+    }
+
+    function setSupabaseSession(session) {
+      supabaseSession = session;
+      if (session) {
+        localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+      } else {
+        localStorage.removeItem(SUPABASE_SESSION_KEY);
+      }
+    }
+
+    async function supabaseRequest(path, options = {}) {
+      const headers = {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${isSupabaseActive() ? supabaseSession.access_token : SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: options.prefer || 'return=representation',
+        ...(options.headers || {})
+      };
+
+      const response = await fetch(`${SUPABASE_URL}${path}`, {
+        ...options,
+        headers
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    }
+
+    async function signInWithSupabase(email, password) {
+      const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Supabase Auth recusou o login.');
+      }
+
+      return response.json();
+    }
+
+    function fromDbGroup(row) {
+      return {
+        dbId: row.id,
+        id: row.slug,
+        name: row.name,
+        number: row.whatsapp_number,
+        pixelId: row.pixel_id || '',
+        capiEndpoint: row.capi_endpoint || '',
+        createdAt: row.created_at,
+        links: (row.redirect_links || []).map((link) => ({
+          dbId: link.id,
+          id: link.slug,
+          name: link.name,
+          message: link.message,
+          createdAt: link.created_at,
+          updatedAt: link.updated_at
+        }))
+      };
+    }
+
+    async function getSupabaseGroups() {
+      const rows = await supabaseRequest('/rest/v1/redirect_groups?select=*,redirect_links(*)&order=created_at.desc&redirect_links.order=created_at.desc', {
+        method: 'GET',
+        prefer: ''
+      });
+
+      return rows.map(fromDbGroup);
+    }
+
+    async function getAllGroups() {
+      if (isSupabaseActive()) {
+        try {
+          const groups = await getSupabaseGroups();
+          dataMode = 'Supabase';
+          return groups;
+        } catch (error) {
+          dataMode = 'Local';
+          setSupabaseSession(null);
+        }
+      }
+
+      dataMode = 'Local';
+      return getGroups();
+    }
+
+    async function createSupabaseGroup(group) {
+      await supabaseRequest('/rest/v1/redirect_groups', {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: group.id,
+          name: group.name,
+          whatsapp_number: group.number,
+          pixel_id: group.pixelId || null,
+          capi_endpoint: group.capiEndpoint || null
+        })
       });
     }
 
-    function buildWhatsAppUrl() {
-      return `https://wa.me/${ACTIVE_WHATSAPP_NUMBER}?text=${encodeURIComponent(ACTIVE_WHATSAPP_MSG)}`;
+    async function updateSupabaseGroup(groupDbId, group) {
+      await supabaseRequest(`/rest/v1/redirect_groups?id=eq.${encodeURIComponent(groupDbId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          name: group.name,
+          whatsapp_number: group.number,
+          pixel_id: group.pixelId || null,
+          capi_endpoint: group.capiEndpoint || null
+        })
+      });
     }
 
-    function sendCapiEvent(eventName, eventId) {
-      if (!CAPI_ENDPOINT) {
-        return;
+    async function deleteSupabaseGroup(groupDbId) {
+      await supabaseRequest(`/rest/v1/redirect_groups?id=eq.${encodeURIComponent(groupDbId)}`, {
+        method: 'DELETE',
+        prefer: 'return=minimal'
+      });
+    }
+
+    async function createSupabaseLink(groupDbId, link) {
+      await supabaseRequest('/rest/v1/redirect_links', {
+        method: 'POST',
+        body: JSON.stringify({
+          group_id: groupDbId,
+          slug: link.id,
+          name: link.name,
+          message: link.message
+        })
+      });
+    }
+
+    async function updateSupabaseLink(linkDbId, groupDbId, link) {
+      await supabaseRequest(`/rest/v1/redirect_links?id=eq.${encodeURIComponent(linkDbId)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          group_id: groupDbId,
+          slug: link.id,
+          name: link.name,
+          message: link.message
+        })
+      });
+    }
+
+    async function deleteSupabaseLink(linkDbId) {
+      await supabaseRequest(`/rest/v1/redirect_links?id=eq.${encodeURIComponent(linkDbId)}`, {
+        method: 'DELETE',
+        prefer: 'return=minimal'
+      });
+    }
+
+    function getGroups() {
+      const groups = readJson(GROUPS_KEY);
+      if (groups.length) {
+        return groups;
       }
 
-      const payload = {
-        event_name: eventName,
-        event_id: eventId,
-        event_source_url: window.location.href,
-        pixel_id: ACTIVE_PIXEL_ID,
-        group_id: GROUP_ID,
-        group_name: GROUP_NAME,
-        link_id: LINK_ID,
-        project_name: PROJECT_NAME,
-        campaign_name: CAMPAIGN_NAME,
-        content_category: 'whatsapp_redirect',
-        user_agent: navigator.userAgent
+      const legacyLinks = readJson(LEGACY_LINKS_KEY);
+      if (!legacyLinks.length) {
+        return [];
+      }
+
+      const legacyGroup = {
+        id: 'links-antigos',
+        name: 'Links antigos',
+        number: legacyLinks[0].number || '5594991031837',
+        pixelId: legacyLinks[0].pixelId || '',
+        capiEndpoint: legacyLinks[0].capiEndpoint || '',
+        createdAt: new Date().toISOString(),
+        links: legacyLinks.map((link) => ({
+          id: link.id,
+          name: link.name,
+          message: link.message,
+          createdAt: link.createdAt || new Date().toISOString()
+        }))
       };
 
-      const body = JSON.stringify(payload);
+      saveGroups([legacyGroup]);
+      return [legacyGroup];
+    }
 
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(CAPI_ENDPOINT, new Blob([body], { type: 'application/json' }));
+    function saveGroups(groups) {
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+    }
+
+    function uniqueId(base, items) {
+      let id = base;
+      let suffix = 2;
+      while (items.some((item) => item.id === id)) {
+        id = `${base}-${suffix}`;
+        suffix += 1;
+      }
+      return id;
+    }
+
+    function buildLink(group, link) {
+      const url = new URL('redirect-whatsapp.html', window.location.href);
+      url.searchParams.set('gid', group.id);
+      url.searchParams.set('gname', group.name);
+      url.searchParams.set('lid', link.id);
+      url.searchParams.set('name', link.name);
+      url.searchParams.set('campaign', link.name);
+      url.searchParams.set('n', group.number);
+      url.searchParams.set('msg', link.message);
+      if (group.pixelId) url.searchParams.set('px', group.pixelId);
+      if (group.capiEndpoint) url.searchParams.set('capi', group.capiEndpoint);
+      return url.href;
+    }
+
+    async function showApp() {
+      loginScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
+      await render();
+    }
+
+    function showLogin() {
+      appScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+    }
+
+    function resetGroupForm() {
+      groupForm.reset();
+      groupFormTitle.textContent = 'Novo grupo';
+      groupSubmitBtn.textContent = 'Criar grupo';
+      groupResetBtn.textContent = 'Limpar';
+      groupStatus.textContent = '';
+    }
+
+    function closeEditGroupModal() {
+      editingGroupId = null;
+      editingGroupDbId = null;
+      editGroupForm.reset();
+      editGroupStatus.textContent = '';
+      editGroupModal.classList.add('hidden');
+    }
+
+    function resetLinkForm() {
+      editingLinkId = null;
+      linkForm.reset();
+      document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      linkFormTitle.textContent = 'Novo link';
+      linkSubmitBtn.textContent = 'Criar link';
+      linkStatus.textContent = '';
+    }
+
+    function closeLinkModal() {
+      resetLinkForm();
+      linkModal.classList.add('hidden');
+    }
+
+    function renderSelect(groups) {
+      if (!groups.length) {
+        linkGroup.innerHTML = '<option value="">Crie um grupo primeiro</option>';
+        linkGroup.disabled = true;
         return;
       }
 
-      fetch(CAPI_ENDPOINT, {
-        method: 'POST',
-        body,
-        keepalive: true,
-        headers: { 'Content-Type': 'application/json' }
-      }).catch(() => {});
+      linkGroup.disabled = false;
+      linkGroup.innerHTML = groups
+        .map((group) => `<option value="${escapeHtml(group.id)}">${escapeHtml(group.name)}</option>`)
+        .join('');
     }
 
-    progressStates.forEach((state) => {
-      window.setTimeout(() => updateProgress(state), state.delay);
-    });
+    async function render() {
+      const groups = await getAllGroups();
+      const linkCount = groups.reduce((total, group) => total + (group.links || []).length, 0);
+      totalGroups.textContent = groups.length;
+      totalLinks.textContent = linkCount;
+      storageMode.textContent = dataMode;
+      renderSelect(groups);
 
-    sendCapiEvent('Lead', LEAD_EVENT_ID);
-
-    window.setTimeout(() => {
-      if (window.fbq) {
-        fbq('track', 'Contact', pixelData, { eventID: CONTACT_EVENT_ID });
-        fbq('trackCustom', 'WhatsAppRedirect', pixelData);
+      if (!groups.length) {
+        groupsList.innerHTML = '<div class="empty"><p>Nenhum grupo criado ainda.</p></div>';
+        return;
       }
 
-      sendCapiEvent('Contact', CONTACT_EVENT_ID);
+      groupsList.innerHTML = groups.map((group) => {
+        const links = group.links || [];
+        const linkHtml = links.length ? links.map((link) => {
+          const url = buildLink(group, link);
+          const safeUrl = escapeHtml(url);
+          return `
+            <article class="link-row">
+              <div class="link-head">
+                <div>
+                  <h3>${escapeHtml(link.name)}</h3>
+                  <div class="meta">
+                    <span>lid=${escapeHtml(link.id)}</span>
+                    <span>gid=${escapeHtml(group.id)}</span>
+                  </div>
+                </div>
+                <span class="pill">Mensagem</span>
+              </div>
+              <div class="url-box">
+                <input readonly value="${safeUrl}">
+                <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
+              </div>
+              <p>${escapeHtml(link.message)}</p>
+              <div class="actions" style="margin-top: 0;">
+                <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+                <button class="btn secondary" type="button" data-edit-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Editar</button>
+                <button class="btn danger" type="button" data-delete-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Excluir</button>
+              </div>
+            </article>
+          `;
+        }).join('') : '<div class="empty"><p>Nenhum link neste grupo ainda.</p></div>';
 
-      window.setTimeout(() => {
-        window.location.href = buildWhatsAppUrl();
-      }, 120);
-    }, REDIRECT_DELAY);
+        return `
+          <article class="group-card">
+            <div class="group-head">
+              <div>
+                <h3>${escapeHtml(group.name)}</h3>
+                <div class="meta">
+                  <span>${escapeHtml(group.number)}</span>
+                  <span>gid=${escapeHtml(group.id)}</span>
+                  <span>${links.length} link(s)</span>
+                </div>
+              </div>
+              <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiEndpoint ? ' + CAPI' : ''}</span>
+            </div>
+            <div class="actions" style="margin-top: 0;">
+              <button class="btn" type="button" data-add-link="${escapeHtml(group.id)}">Adicionar link</button>
+              <button class="btn secondary" type="button" data-edit-group="${escapeHtml(group.id)}">Editar grupo</button>
+              <button class="btn danger" type="button" data-delete-group="${escapeHtml(group.id)}">Excluir grupo</button>
+            </div>
+            <div class="link-list">${linkHtml}</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function copyText(text, button) {
+      await navigator.clipboard.writeText(text);
+      const original = button.textContent;
+      button.textContent = 'Copiado';
+      window.setTimeout(() => { button.textContent = original; }, 1400);
+    }
+
+    function fillGroupForm(group) {
+      editingGroupId = group.id;
+      editingGroupDbId = group.dbId || null;
+      document.getElementById('editGroupName').value = group.name;
+      document.getElementById('editGroupNumber').value = group.number;
+      document.getElementById('editGroupPixel').value = group.pixelId || '';
+      document.getElementById('editGroupCapi').value = group.capiEndpoint || '';
+      document.getElementById('editGroupTitle').textContent = `Editar grupo: ${group.name}`;
+      editGroupStatus.textContent = '';
+      editGroupModal.classList.remove('hidden');
+      document.getElementById('editGroupNumber').focus();
+    }
+
+    function startLinkForGroup(group) {
+      resetLinkForm();
+      linkGroup.value = group.id;
+      document.getElementById('linkName').disabled = false;
+      document.getElementById('linkName').readOnly = false;
+      document.getElementById('linkMessage').disabled = false;
+      document.getElementById('linkMessage').readOnly = false;
+      linkFormTitle.textContent = `Novo link em: ${group.name}`;
+      linkStatus.textContent = 'Crie uma nova mensagem/campanha para este grupo.';
+      linkModal.classList.remove('hidden');
+      window.requestAnimationFrame(() => document.getElementById('linkName').focus());
+    }
+
+    function fillLinkForm(group, link) {
+      editingLinkId = link.id;
+      linkGroup.value = group.id;
+      document.getElementById('linkName').value = link.name;
+      document.getElementById('linkMessage').value = link.message;
+      document.getElementById('linkName').disabled = false;
+      document.getElementById('linkName').readOnly = false;
+      document.getElementById('linkMessage').disabled = false;
+      document.getElementById('linkMessage').readOnly = false;
+      linkFormTitle.textContent = `Editando link: ${link.name}`;
+      linkSubmitBtn.textContent = 'Salvar link';
+      linkStatus.textContent = 'Altere a campanha ou mensagem e clique em Salvar link.';
+      linkModal.classList.remove('hidden');
+      window.requestAnimationFrame(() => document.getElementById('linkName').focus());
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const session = await signInWithSupabase(email, password);
+        setSupabaseSession(session);
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        loginError.textContent = '';
+        await showApp();
+        return;
+      } catch (error) {
+        setSupabaseSession(null);
+      }
+
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, 'true');
+        loginError.textContent = 'Entrando em modo local. Crie o usuário no Supabase Auth para sincronizar no banco.';
+        await showApp();
+        return;
+      }
+
+      loginError.textContent = 'E-mail ou senha inválidos.';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(SESSION_KEY);
+      setSupabaseSession(null);
+      showLogin();
+    });
+
+    groupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const groups = await getAllGroups();
+      const name = document.getElementById('groupName').value.trim();
+      const number = document.getElementById('groupNumber').value.replace(/\D/g, '');
+      const pixelId = document.getElementById('groupPixel').value.trim();
+      const capiEndpoint = document.getElementById('groupCapi').value.trim();
+
+      if (!name || !number) {
+        groupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        return;
+      }
+
+      const id = uniqueId(slugify(name), groups);
+      const newGroup = { id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() };
+
+      if (isSupabaseActive()) {
+        await createSupabaseGroup(newGroup);
+      } else {
+        groups.unshift(newGroup);
+        saveGroups(groups);
+      }
+
+      resetGroupForm();
+      await render();
+    });
+
+    editGroupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const groups = await getAllGroups();
+      const name = document.getElementById('editGroupName').value.trim();
+      const number = document.getElementById('editGroupNumber').value.replace(/\D/g, '');
+      const pixelId = document.getElementById('editGroupPixel').value.trim();
+      const capiEndpoint = document.getElementById('editGroupCapi').value.trim();
+
+      if (!editingGroupId || !name || !number) {
+        editGroupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        return;
+      }
+
+      const updatedGroup = { name, number, pixelId, capiEndpoint };
+
+      if (isSupabaseActive()) {
+        const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
+        if (!currentGroup) {
+          editGroupStatus.textContent = 'Não encontrei este grupo para salvar. Recarregue a página e tente novamente.';
+          return;
+        }
+
+        await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
+      } else {
+        saveGroups(groups.map((group) => group.id === editingGroupId ? {
+          ...group,
+          ...updatedGroup,
+          updatedAt: new Date().toISOString()
+        } : group));
+      }
+
+      closeEditGroupModal();
+      await render();
+    });
+
+    linkForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const groups = await getAllGroups();
+      const groupId = linkGroup.value;
+      const name = document.getElementById('linkName').value.trim();
+      const message = document.getElementById('linkMessage').value.trim();
+
+      if (!groupId || !name || !message) return;
+
+      if (isSupabaseActive()) {
+        const targetGroup = groups.find((group) => group.id === groupId);
+
+        if (editingLinkId) {
+          const currentGroup = groups.find((group) => (group.links || []).some((link) => link.id === editingLinkId));
+          const currentLink = currentGroup && (currentGroup.links || []).find((link) => link.id === editingLinkId);
+          const siblingLinks = (targetGroup.links || []).filter((link) => link.id !== editingLinkId);
+          const id = uniqueId(slugify(`${targetGroup.name}-${name}`), siblingLinks);
+          await updateSupabaseLink(currentLink.dbId, targetGroup.dbId, { id, name, message });
+        } else {
+          const id = uniqueId(slugify(`${targetGroup.name}-${name}`), targetGroup.links || []);
+          await createSupabaseLink(targetGroup.dbId, { id, name, message });
+        }
+
+        resetLinkForm();
+        closeLinkModal();
+        await render();
+        return;
+      }
+
+      const nextGroups = groups.map((group) => {
+        const links = group.links || [];
+
+        if (editingLinkId) {
+          const currentLink = groups
+            .flatMap((item) => item.links || [])
+            .find((link) => link.id === editingLinkId);
+
+          if (group.id === groupId) {
+            const hasLink = links.some((link) => link.id === editingLinkId);
+            const updatedLink = {
+              ...(currentLink || {}),
+              id: editingLinkId,
+              name,
+              message,
+              updatedAt: new Date().toISOString()
+            };
+
+            return {
+              ...group,
+              links: hasLink
+                ? links.map((link) => link.id === editingLinkId ? updatedLink : link)
+                : [updatedLink, ...links]
+            };
+          }
+
+          return {
+            ...group,
+            links: links.filter((link) => link.id !== editingLinkId)
+          };
+        }
+
+        if (group.id !== groupId) {
+          return group;
+        }
+
+        const id = uniqueId(slugify(`${group.name}-${name}`), links);
+        return {
+          ...group,
+          links: [{ id, name, message, createdAt: new Date().toISOString() }, ...links]
+        };
+      });
+
+      saveGroups(nextGroups);
+      closeLinkModal();
+      await render();
+    });
+
+    groupForm.addEventListener('reset', () => window.setTimeout(resetGroupForm, 0));
+    closeEditGroupBtn.addEventListener('click', closeEditGroupModal);
+    editGroupForm.addEventListener('pointerdown', (event) => event.stopPropagation());
+    editGroupForm.addEventListener('click', (event) => event.stopPropagation());
+    editGroupModal.addEventListener('click', (event) => {
+      if (event.target === editGroupModal) {
+        closeEditGroupModal();
+      }
+    });
+    closeLinkBtn.addEventListener('click', closeLinkModal);
+    linkForm.addEventListener('pointerdown', (event) => event.stopPropagation());
+    linkForm.addEventListener('click', (event) => event.stopPropagation());
+    linkModal.addEventListener('click', (event) => {
+      if (event.target === linkModal) {
+        closeLinkModal();
+      }
+    });
+
+    groupsList.addEventListener('click', async (event) => {
+      const copyValue = event.target.getAttribute('data-copy');
+      const editGroupId = event.target.getAttribute('data-edit-group');
+      const addLinkGroupId = event.target.getAttribute('data-add-link');
+      const deleteGroupId = event.target.getAttribute('data-delete-group');
+      const editLinkId = event.target.getAttribute('data-edit-link');
+      const deleteLinkId = event.target.getAttribute('data-delete-link');
+      const groupId = event.target.getAttribute('data-group');
+
+      if (copyValue) copyText(copyValue, event.target);
+
+      if (editGroupId) {
+        const group = (await getAllGroups()).find((item) => item.id === editGroupId);
+        if (group) fillGroupForm(group);
+      }
+
+      if (addLinkGroupId) {
+        const group = (await getAllGroups()).find((item) => item.id === addLinkGroupId);
+        if (group) startLinkForGroup(group);
+      }
+
+      if (deleteGroupId) {
+        const groups = await getAllGroups();
+        const group = groups.find((item) => item.id === deleteGroupId);
+
+        if (isSupabaseActive()) {
+          await deleteSupabaseGroup(group.dbId);
+        } else {
+          saveGroups(groups.filter((item) => item.id !== deleteGroupId));
+        }
+
+        if (editingGroupId === deleteGroupId) resetGroupForm();
+        if (editingGroupId === deleteGroupId) closeEditGroupModal();
+        await render();
+      }
+
+      if (editLinkId && groupId) {
+        const group = (await getAllGroups()).find((item) => item.id === groupId);
+        const link = group && (group.links || []).find((item) => item.id === editLinkId);
+        if (group && link) fillLinkForm(group, link);
+      }
+
+      if (deleteLinkId && groupId) {
+        const groups = await getAllGroups();
+        const group = groups.find((item) => item.id === groupId);
+        const link = group && (group.links || []).find((item) => item.id === deleteLinkId);
+
+        if (isSupabaseActive()) {
+          await deleteSupabaseLink(link.dbId);
+        } else {
+          saveGroups(groups.map((item) => item.id === groupId ? {
+            ...item,
+            links: (item.links || []).filter((groupLink) => groupLink.id !== deleteLinkId)
+          } : item));
+        }
+
+        if (editingLinkId === deleteLinkId) resetLinkForm();
+        await render();
+      }
+    });
+
+    if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+      showApp();
+    }
   </script>
 </body>
 </html>
