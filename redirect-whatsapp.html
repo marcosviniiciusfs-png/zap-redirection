@@ -14,8 +14,11 @@
     const WHATSAPP_NUMBER = '5594991031837';
     const WHATSAPP_MSG    = 'Olá! Vi o anúncio e quero saber mais.';
     const REDIRECT_DELAY  = 1200;
+    const SUPABASE_URL = 'https://tmevdvduucsevmwhviii.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZXZkdmR1dWNzZXZtd2h2aWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTE2OTEsImV4cCI6MjA5NTQ2NzY5MX0._XN9c75xYf1gZztc51KC3m-jbvtNc9s1OCmgHkx2U-E';
 
     const params = new URLSearchParams(window.location.search);
+    const OWNER_USER_ID = params.get('uid') || '';
     const GROUP_ID = params.get('gid') || 'default-group';
     const GROUP_NAME = params.get('gname') || 'Grupo padrão';
     const LINK_ID = params.get('lid') || 'default';
@@ -363,11 +366,40 @@
       }).catch(() => {});
     }
 
+    function recordRedirectEvent(eventName, eventId) {
+      if (!OWNER_USER_ID) {
+        return;
+      }
+
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/log_redirect_event`, {
+        method: 'POST',
+        body: JSON.stringify({
+          p_user_id: OWNER_USER_ID,
+          p_group_slug: GROUP_ID,
+          p_link_slug: LINK_ID,
+          p_event_name: eventName,
+          p_event_id: eventId,
+          p_pixel_id: ACTIVE_PIXEL_ID,
+          p_campaign_name: CAMPAIGN_NAME,
+          p_event_source_url: window.location.href,
+          p_user_agent: navigator.userAgent,
+          p_payload: pixelData
+        }),
+        keepalive: true,
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }).catch(() => {});
+    }
+
     progressStates.forEach((state) => {
       window.setTimeout(() => updateProgress(state), state.delay);
     });
 
     sendCapiEvent('Lead', LEAD_EVENT_ID);
+    recordRedirectEvent('Lead', LEAD_EVENT_ID);
 
     window.setTimeout(() => {
       if (window.fbq) {

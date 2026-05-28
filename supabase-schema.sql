@@ -92,6 +92,66 @@ on public.redirect_events
 for select
 using (auth.uid() = user_id);
 
+create or replace function public.log_redirect_event(
+  p_user_id uuid,
+  p_group_slug text,
+  p_link_slug text,
+  p_event_name text,
+  p_event_id text,
+  p_pixel_id text,
+  p_campaign_name text,
+  p_event_source_url text,
+  p_user_agent text,
+  p_payload jsonb default '{}'::jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1
+    from public.redirect_groups
+    join public.redirect_links
+      on redirect_links.group_id = redirect_groups.id
+    where redirect_groups.user_id = p_user_id
+      and redirect_groups.slug = p_group_slug
+      and redirect_links.slug = p_link_slug
+  ) then
+    return;
+  end if;
+
+  insert into public.redirect_events (
+    user_id,
+    group_slug,
+    link_slug,
+    event_name,
+    event_id,
+    pixel_id,
+    campaign_name,
+    event_source_url,
+    user_agent,
+    payload
+  )
+  values (
+    p_user_id,
+    p_group_slug,
+    p_link_slug,
+    p_event_name,
+    p_event_id,
+    p_pixel_id,
+    p_campaign_name,
+    p_event_source_url,
+    p_user_agent,
+    coalesce(p_payload, '{}'::jsonb)
+  );
+end;
+$$;
+
+revoke all on function public.log_redirect_event(uuid, text, text, text, text, text, text, text, text, jsonb) from public;
+grant execute on function public.log_redirect_event(uuid, text, text, text, text, text, text, text, text, jsonb) to anon, authenticated;
+
 create index if not exists redirect_groups_user_slug_idx on public.redirect_groups(user_id, slug);
 create index if not exists redirect_links_group_slug_idx on public.redirect_links(group_id, slug);
 create index if not exists redirect_events_group_link_idx on public.redirect_events(group_slug, link_slug, created_at desc);

@@ -274,8 +274,8 @@
     <div class="metrics">
       <div class="metric"><strong id="totalGroups">0</strong><span>Grupos criados neste navegador.</span></div>
       <div class="metric"><strong id="totalLinks">0</strong><span>Links e mensagens personalizados.</span></div>
+      <div class="metric"><strong id="totalLeads">0</strong><span>Leads registrados nos links.</span></div>
       <div class="metric"><strong id="storageMode">Local</strong><span>Modo de armazenamento ativo.</span></div>
-      <div class="metric"><strong>lid</strong><span>Use o link para diferenciar campanhas e anúncios.</span></div>
     </div>
 
     <div class="notice">
@@ -372,6 +372,7 @@
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
+    const totalLeads = document.getElementById('totalLeads');
     const storageMode = document.getElementById('storageMode');
     const groupFormTitle = document.getElementById('groupFormTitle');
     const linkFormTitle = document.getElementById('linkFormTitle');
@@ -469,6 +470,7 @@
     function fromDbGroup(row) {
       return {
         dbId: row.id,
+        userId: row.user_id,
         id: row.slug,
         name: row.name,
         number: row.whatsapp_number,
@@ -493,6 +495,31 @@
       });
 
       return rows.map(fromDbGroup);
+    }
+
+    async function getSupabaseLeadCounts() {
+      if (!isSupabaseActive()) {
+        return new Map();
+      }
+
+      const rows = await supabaseRequest('/rest/v1/redirect_events?select=group_slug,link_slug&event_name=eq.Lead', {
+        method: 'GET',
+        prefer: ''
+      });
+
+      return rows.reduce((counts, row) => {
+        const key = `${row.group_slug || ''}::${row.link_slug || ''}`;
+        counts.set(key, (counts.get(key) || 0) + 1);
+        return counts;
+      }, new Map());
+    }
+
+    async function getLeadCounts() {
+      try {
+        return await getSupabaseLeadCounts();
+      } catch (error) {
+        return new Map();
+      }
     }
 
     async function getAllGroups() {
@@ -627,6 +654,7 @@
       url.searchParams.set('campaign', link.name);
       url.searchParams.set('n', group.number);
       url.searchParams.set('msg', link.message);
+      if (group.userId) url.searchParams.set('uid', group.userId);
       if (group.pixelId) url.searchParams.set('px', group.pixelId);
       if (group.capiEndpoint) url.searchParams.set('capi', group.capiEndpoint);
       return url.href;
@@ -688,9 +716,12 @@
 
     async function render() {
       const groups = await getAllGroups();
+      const leadCounts = await getLeadCounts();
       const linkCount = groups.reduce((total, group) => total + (group.links || []).length, 0);
+      const leadCount = [...leadCounts.values()].reduce((total, count) => total + count, 0);
       totalGroups.textContent = groups.length;
       totalLinks.textContent = linkCount;
+      totalLeads.textContent = leadCount;
       storageMode.textContent = dataMode;
       renderSelect(groups);
 
@@ -704,6 +735,7 @@
         const linkHtml = links.length ? links.map((link) => {
           const url = buildLink(group, link);
           const safeUrl = escapeHtml(url);
+          const linkLeadCount = leadCounts.get(`${group.id}::${link.id}`) || 0;
           return `
             <article class="link-row">
               <div class="link-head">
@@ -714,7 +746,7 @@
                     <span>gid=${escapeHtml(group.id)}</span>
                   </div>
                 </div>
-                <span class="pill">Mensagem</span>
+                <span class="pill">${linkLeadCount} lead(s)</span>
               </div>
               <div class="url-box">
                 <input readonly value="${safeUrl}">
