@@ -16,6 +16,7 @@
     const REDIRECT_DELAY  = 1200;
     const SUPABASE_URL = 'https://tmevdvduucsevmwhviii.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZXZkdmR1dWNzZXZtd2h2aWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTE2OTEsImV4cCI6MjA5NTQ2NzY5MX0._XN9c75xYf1gZztc51KC3m-jbvtNc9s1OCmgHkx2U-E';
+    const CAPI_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/meta-capi`;
 
     const params = new URLSearchParams(window.location.search);
     const OWNER_USER_ID = params.get('uid') || '';
@@ -27,7 +28,6 @@
     const ACTIVE_PIXEL_ID = params.get('px') || PIXEL_ID;
     const ACTIVE_WHATSAPP_NUMBER = (params.get('n') || WHATSAPP_NUMBER).replace(/\D/g, '');
     const ACTIVE_WHATSAPP_MSG = params.get('msg') || WHATSAPP_MSG;
-    const CAPI_ENDPOINT = params.get('capi') || '';
     const LEAD_EVENT_ID = `${LINK_ID}-lead-${Date.now()}`;
     const CONTACT_EVENT_ID = `${LINK_ID}-contact-${Date.now()}`;
 
@@ -39,6 +39,15 @@
       campaign_name: CAMPAIGN_NAME,
       link_id: LINK_ID
     };
+
+    function getCookie(name) {
+      return document.cookie
+        .split('; ')
+        .find((item) => item.startsWith(`${name}=`))
+        ?.split('=')
+        .slice(1)
+        .join('=') || '';
+    }
 
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -333,11 +342,12 @@
     }
 
     function sendCapiEvent(eventName, eventId) {
-      if (!CAPI_ENDPOINT) {
+      if (!OWNER_USER_ID) {
         return;
       }
 
       const payload = {
+        user_id: OWNER_USER_ID,
         event_name: eventName,
         event_id: eventId,
         event_source_url: window.location.href,
@@ -348,17 +358,19 @@
         project_name: PROJECT_NAME,
         campaign_name: CAMPAIGN_NAME,
         content_category: 'whatsapp_redirect',
-        user_agent: navigator.userAgent
+        user_agent: navigator.userAgent,
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc')
       };
 
       const body = JSON.stringify(payload);
 
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(CAPI_ENDPOINT, new Blob([body], { type: 'application/json' }));
+        navigator.sendBeacon(CAPI_FUNCTION_URL, new Blob([body], { type: 'application/json' }));
         return;
       }
 
-      fetch(CAPI_ENDPOINT, {
+      fetch(CAPI_FUNCTION_URL, {
         method: 'POST',
         body,
         keepalive: true,

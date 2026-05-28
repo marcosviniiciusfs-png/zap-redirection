@@ -317,7 +317,7 @@
             <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
             <label>Número do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
             <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
-            <label>Endpoint da API de Conversões <input id="groupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
+            <label>Token da API de Conversões <input id="groupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
           </div>
           <div class="actions">
             <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
@@ -346,7 +346,7 @@
         <label>Nome do grupo <input id="editGroupName" required></label>
         <label>Número do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
         <label>Pixel ID <input id="editGroupPixel" placeholder="Pixel usado neste grupo"></label>
-        <label>Endpoint da API de Conversões <input id="editGroupCapi" type="url" placeholder="Opcional: URL do seu servidor CAPI"></label>
+        <label>Token da API de Conversões <input id="editGroupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
       </div>
       <div class="actions">
         <button class="btn" type="submit">Salvar grupo</button>
@@ -527,7 +527,7 @@
         name: row.name,
         number: row.whatsapp_number,
         pixelId: row.pixel_id || '',
-        capiEndpoint: row.capi_endpoint || '',
+        capiToken: row.capi_access_token || '',
         createdAt: row.created_at,
         links: (row.redirect_links || []).map((link) => ({
           dbId: link.id,
@@ -643,7 +643,7 @@
           name: group.name,
           whatsapp_number: group.number,
           pixel_id: group.pixelId || null,
-          capi_endpoint: group.capiEndpoint || null
+          capi_access_token: group.capiToken || null
         })
       });
     }
@@ -655,7 +655,7 @@
           name: group.name,
           whatsapp_number: group.number,
           pixel_id: group.pixelId || null,
-          capi_endpoint: group.capiEndpoint || null
+          capi_access_token: group.capiToken || null
         })
       });
     }
@@ -714,7 +714,7 @@
         name: 'Links antigos',
         number: legacyLinks[0].number || '5594991031837',
         pixelId: legacyLinks[0].pixelId || '',
-        capiEndpoint: legacyLinks[0].capiEndpoint || '',
+        capiToken: legacyLinks[0].capiToken || '',
         createdAt: new Date().toISOString(),
         links: legacyLinks.map((link) => ({
           id: link.id,
@@ -753,7 +753,6 @@
       url.searchParams.set('msg', link.message);
       if (group.userId) url.searchParams.set('uid', group.userId);
       if (group.pixelId) url.searchParams.set('px', group.pixelId);
-      if (group.capiEndpoint) url.searchParams.set('capi', group.capiEndpoint);
       return url.href;
     }
 
@@ -871,7 +870,7 @@
                   <span>${links.length} link(s)</span>
                 </div>
               </div>
-              <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiEndpoint ? ' + CAPI' : ''}</span>
+              <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiToken ? ' + CAPI' : ''}</span>
             </div>
             <div class="actions" style="margin-top: 0;">
               <button class="btn" type="button" data-add-link="${escapeHtml(group.id)}">Adicionar link</button>
@@ -897,7 +896,7 @@
       document.getElementById('editGroupName').value = group.name;
       document.getElementById('editGroupNumber').value = group.number;
       document.getElementById('editGroupPixel').value = group.pixelId || '';
-      document.getElementById('editGroupCapi').value = group.capiEndpoint || '';
+      document.getElementById('editGroupCapi').value = group.capiToken || '';
       document.getElementById('editGroupTitle').textContent = `Editar grupo: ${group.name}`;
       editGroupStatus.textContent = '';
       editGroupModal.classList.remove('hidden');
@@ -1043,7 +1042,7 @@
       const name = document.getElementById('groupName').value.trim();
       const number = document.getElementById('groupNumber').value.replace(/\D/g, '');
       const pixelId = document.getElementById('groupPixel').value.trim();
-      const capiEndpoint = document.getElementById('groupCapi').value.trim();
+      const capiToken = document.getElementById('groupCapi').value.trim();
 
       if (!name || !number) {
         groupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
@@ -1051,7 +1050,7 @@
       }
 
       const id = uniqueId(slugify(name), groups);
-      const newGroup = { id, name, number, pixelId, capiEndpoint, links: [], createdAt: new Date().toISOString() };
+      const newGroup = { id, name, number, pixelId, capiToken, links: [], createdAt: new Date().toISOString() };
 
       if (isSupabaseActive()) {
         await createSupabaseGroup(newGroup);
@@ -1070,14 +1069,14 @@
       const name = document.getElementById('editGroupName').value.trim();
       const number = document.getElementById('editGroupNumber').value.replace(/\D/g, '');
       const pixelId = document.getElementById('editGroupPixel').value.trim();
-      const capiEndpoint = document.getElementById('editGroupCapi').value.trim();
+      const capiToken = document.getElementById('editGroupCapi').value.trim();
 
       if (!editingGroupId || !name || !number) {
         editGroupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
         return;
       }
 
-      const updatedGroup = { name, number, pixelId, capiEndpoint };
+      const updatedGroup = { name, number, pixelId, capiToken };
 
       if (isSupabaseActive()) {
         const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);

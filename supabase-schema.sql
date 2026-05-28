@@ -8,10 +8,14 @@ create table if not exists public.redirect_groups (
   whatsapp_number text not null,
   pixel_id text,
   capi_endpoint text,
+  capi_access_token text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, slug)
 );
+
+alter table public.redirect_groups
+add column if not exists capi_access_token text;
 
 create table if not exists public.redirect_links (
   id uuid primary key default gen_random_uuid(),
