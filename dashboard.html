@@ -1227,16 +1227,21 @@
     });
 
     groupsList.addEventListener('click', async (event) => {
-      const copyValue = event.target.getAttribute('data-copy');
-      const editGroupId = event.target.getAttribute('data-edit-group');
-      const addLinkGroupId = event.target.getAttribute('data-add-link');
-      const deleteGroupId = event.target.getAttribute('data-delete-group');
-      const viewLeadsId = event.target.getAttribute('data-view-leads');
-      const editLinkId = event.target.getAttribute('data-edit-link');
-      const deleteLinkId = event.target.getAttribute('data-delete-link');
-      const groupId = event.target.getAttribute('data-group');
+      const action = event.target.closest('[data-copy], [data-edit-group], [data-add-link], [data-delete-group], [data-view-leads], [data-edit-link], [data-delete-link]');
+      if (!action || !groupsList.contains(action)) {
+        return;
+      }
 
-      if (copyValue) copyText(copyValue, event.target);
+      const copyValue = action.getAttribute('data-copy');
+      const editGroupId = action.getAttribute('data-edit-group');
+      const addLinkGroupId = action.getAttribute('data-add-link');
+      const deleteGroupId = action.getAttribute('data-delete-group');
+      const viewLeadsId = action.getAttribute('data-view-leads');
+      const editLinkId = action.getAttribute('data-edit-link');
+      const deleteLinkId = action.getAttribute('data-delete-link');
+      const groupId = action.getAttribute('data-group');
+
+      if (copyValue) copyText(copyValue, action);
 
       if (editGroupId) {
         const group = (await getAllGroups()).find((item) => item.id === editGroupId);
@@ -1251,8 +1256,19 @@
       if (deleteGroupId) {
         const groups = await getAllGroups();
         const group = groups.find((item) => item.id === deleteGroupId);
+        if (!group) {
+          return;
+        }
+
+        const confirmed = window.confirm(`Excluir o grupo "${group.name}" e todos os links dele?`);
+        if (!confirmed) {
+          return;
+        }
 
         if (isSupabaseActive()) {
+          if (!group.dbId) {
+            return;
+          }
           await deleteSupabaseGroup(group.dbId);
         } else {
           saveGroups(groups.filter((item) => item.id !== deleteGroupId));
