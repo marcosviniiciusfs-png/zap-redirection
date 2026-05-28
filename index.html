@@ -459,6 +459,14 @@
         .replace(/'/g, '&#039;');
     }
 
+    function getFriendlyError(error) {
+      const message = error instanceof Error ? error.message : String(error || '');
+      if (message.includes('capi_access_token') || message.includes('PGRST204')) {
+        return 'A coluna do token CAPI ainda nao existe no Supabase. Rode o SQL da coluna capi_access_token e tente novamente.';
+      }
+      return 'Nao foi possivel salvar. Verifique os dados e tente novamente.';
+    }
+
     function readJson(key) {
       try { return JSON.parse(localStorage.getItem(key)) || []; }
       catch (error) { return []; }
@@ -1038,6 +1046,7 @@
 
     groupForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      groupStatus.textContent = 'Salvando grupo...';
       const groups = await getAllGroups();
       const name = document.getElementById('groupName').value.trim();
       const number = document.getElementById('groupNumber').value.replace(/\D/g, '');
@@ -1052,19 +1061,24 @@
       const id = uniqueId(slugify(name), groups);
       const newGroup = { id, name, number, pixelId, capiToken, links: [], createdAt: new Date().toISOString() };
 
-      if (isSupabaseActive()) {
-        await createSupabaseGroup(newGroup);
-      } else {
-        groups.unshift(newGroup);
-        saveGroups(groups);
-      }
+      try {
+        if (isSupabaseActive()) {
+          await createSupabaseGroup(newGroup);
+        } else {
+          groups.unshift(newGroup);
+          saveGroups(groups);
+        }
 
-      resetGroupForm();
-      await render();
+        resetGroupForm();
+        await render();
+      } catch (error) {
+        groupStatus.textContent = getFriendlyError(error);
+      }
     });
 
     editGroupForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      editGroupStatus.textContent = 'Salvando grupo...';
       const groups = await getAllGroups();
       const name = document.getElementById('editGroupName').value.trim();
       const number = document.getElementById('editGroupNumber').value.replace(/\D/g, '');
@@ -1072,30 +1086,34 @@
       const capiToken = document.getElementById('editGroupCapi').value.trim();
 
       if (!editingGroupId || !name || !number) {
-        editGroupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        editGroupStatus.textContent = 'Informe o nome do grupo e o numero do WhatsApp.';
         return;
       }
 
       const updatedGroup = { name, number, pixelId, capiToken };
 
-      if (isSupabaseActive()) {
-        const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
-        if (!currentGroup) {
-          editGroupStatus.textContent = 'Não encontrei este grupo para salvar. Recarregue a página e tente novamente.';
-          return;
+      try {
+        if (isSupabaseActive()) {
+          const currentGroup = groups.find((group) => group.dbId === editingGroupDbId || group.id === editingGroupId);
+          if (!currentGroup) {
+            editGroupStatus.textContent = 'Nao encontrei este grupo para salvar. Recarregue a pagina e tente novamente.';
+            return;
+          }
+
+          await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
+        } else {
+          saveGroups(groups.map((group) => group.id === editingGroupId ? {
+            ...group,
+            ...updatedGroup,
+            updatedAt: new Date().toISOString()
+          } : group));
         }
 
-        await updateSupabaseGroup(currentGroup.dbId, updatedGroup);
-      } else {
-        saveGroups(groups.map((group) => group.id === editingGroupId ? {
-          ...group,
-          ...updatedGroup,
-          updatedAt: new Date().toISOString()
-        } : group));
+        closeEditGroupModal();
+        await render();
+      } catch (error) {
+        editGroupStatus.textContent = getFriendlyError(error);
       }
-
-      closeEditGroupModal();
-      await render();
     });
 
     linkForm.addEventListener('submit', async (event) => {
