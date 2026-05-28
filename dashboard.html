@@ -205,6 +205,23 @@
     .link-list { display: grid; gap: 10px; }
     .url-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
     .url-box input { font-size: 0.86rem; }
+    .lead-list { display: grid; gap: 10px; max-height: min(62vh, 520px); overflow: auto; margin-top: 16px; }
+    .lead-item {
+      display: grid;
+      gap: 7px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .lead-item strong { font-size: 0.96rem; }
+    .lead-item code {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 0.8rem;
+    }
     .hidden { display: none !important; }
 
     .modal-backdrop {
@@ -227,6 +244,8 @@
       border-radius: 8px;
       box-shadow: var(--shadow);
     }
+
+    .modal.wide { width: min(100%, 760px); }
 
     .modal input,
     .modal select,
@@ -345,6 +364,17 @@
     </form>
   </section>
 
+  <section class="modal-backdrop hidden" id="leadModal" aria-modal="true" role="dialog" aria-labelledby="leadModalTitle">
+    <div class="modal wide">
+      <h2 id="leadModalTitle">Leads do link</h2>
+      <p id="leadModalSummary">Carregando...</p>
+      <div class="lead-list" id="leadList"></div>
+      <div class="actions">
+        <button class="btn secondary" type="button" id="closeLeadBtn">Fechar</button>
+      </div>
+    </div>
+  </section>
+
   <script>
     const ADMIN_EMAIL = 'hurtzgestao@gmail.com';
     const ADMIN_PASSWORD = 'NovoRei@01Hurtz';
@@ -368,6 +398,11 @@
     const linkModal = document.getElementById('linkModal');
     const linkForm = document.getElementById('linkForm');
     const closeLinkBtn = document.getElementById('closeLinkBtn');
+    const leadModal = document.getElementById('leadModal');
+    const closeLeadBtn = document.getElementById('closeLeadBtn');
+    const leadModalTitle = document.getElementById('leadModalTitle');
+    const leadModalSummary = document.getElementById('leadModalSummary');
+    const leadList = document.getElementById('leadList');
     const groupsList = document.getElementById('groupsList');
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
@@ -520,6 +555,25 @@
       } catch (error) {
         return new Map();
       }
+    }
+
+    async function getLeadEvents(groupId, linkId) {
+      if (!isSupabaseActive()) {
+        return [];
+      }
+
+      const query = [
+        '/rest/v1/redirect_events?select=event_name,event_id,campaign_name,event_source_url,user_agent,created_at',
+        `group_slug=eq.${encodeURIComponent(groupId)}`,
+        `link_slug=eq.${encodeURIComponent(linkId)}`,
+        'event_name=eq.Lead',
+        'order=created_at.desc'
+      ].join('&');
+
+      return supabaseRequest(query, {
+        method: 'GET',
+        prefer: ''
+      });
     }
 
     async function getAllGroups() {
@@ -755,6 +809,7 @@
               <p>${escapeHtml(link.message)}</p>
               <div class="actions" style="margin-top: 0;">
                 <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+                <button class="btn secondary" type="button" data-view-leads="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Ver leads</button>
                 <button class="btn secondary" type="button" data-edit-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Editar</button>
                 <button class="btn danger" type="button" data-delete-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Excluir</button>
               </div>
@@ -833,6 +888,57 @@
       linkStatus.textContent = 'Altere a campanha ou mensagem e clique em Salvar link.';
       linkModal.classList.remove('hidden');
       window.requestAnimationFrame(() => document.getElementById('linkName').focus());
+    }
+
+    function formatDateTime(value) {
+      if (!value) return 'Data indisponivel';
+      return new Intl.DateTimeFormat('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }).format(new Date(value));
+    }
+
+    function closeLeadModal() {
+      leadModal.classList.add('hidden');
+      leadList.innerHTML = '';
+      leadModalSummary.textContent = '';
+    }
+
+    async function showLeadDetails(groupId, linkId) {
+      const groups = await getAllGroups();
+      const group = groups.find((item) => item.id === groupId);
+      const link = group && (group.links || []).find((item) => item.id === linkId);
+
+      leadModalTitle.textContent = link ? `Leads: ${link.name}` : 'Leads do link';
+      leadModalSummary.textContent = 'Carregando registros deste link...';
+      leadList.innerHTML = '';
+      leadModal.classList.remove('hidden');
+
+      try {
+        const leads = await getLeadEvents(groupId, linkId);
+        leadModalSummary.textContent = `${leads.length} lead(s) registrados para este link.`;
+
+        if (!leads.length) {
+          leadList.innerHTML = '<div class="empty"><p>Nenhum lead registrado neste link ainda.</p></div>';
+          return;
+        }
+
+        leadList.innerHTML = leads.map((lead, index) => `
+          <article class="lead-item">
+            <strong>Lead #${leads.length - index}</strong>
+            <div class="meta">
+              <span>${escapeHtml(formatDateTime(lead.created_at))}</span>
+              <span>${escapeHtml(lead.campaign_name || 'Campanha sem nome')}</span>
+              <span>${escapeHtml(lead.event_name || 'Lead')}</span>
+            </div>
+            <code>${escapeHtml(lead.event_source_url || 'URL nao registrada')}</code>
+            <code>${escapeHtml(lead.user_agent || 'Dispositivo nao registrado')}</code>
+          </article>
+        `).join('');
+      } catch (error) {
+        leadModalSummary.textContent = 'Nao foi possivel carregar os leads deste link.';
+        leadList.innerHTML = '<div class="empty"><p>Confirme se o SQL de metricas foi aplicado no Supabase.</p></div>';
+      }
     }
 
     loginForm.addEventListener('submit', async (event) => {
@@ -1023,12 +1129,19 @@
         closeLinkModal();
       }
     });
+    closeLeadBtn.addEventListener('click', closeLeadModal);
+    leadModal.addEventListener('click', (event) => {
+      if (event.target === leadModal) {
+        closeLeadModal();
+      }
+    });
 
     groupsList.addEventListener('click', async (event) => {
       const copyValue = event.target.getAttribute('data-copy');
       const editGroupId = event.target.getAttribute('data-edit-group');
       const addLinkGroupId = event.target.getAttribute('data-add-link');
       const deleteGroupId = event.target.getAttribute('data-delete-group');
+      const viewLeadsId = event.target.getAttribute('data-view-leads');
       const editLinkId = event.target.getAttribute('data-edit-link');
       const deleteLinkId = event.target.getAttribute('data-delete-link');
       const groupId = event.target.getAttribute('data-group');
@@ -1058,6 +1171,10 @@
         if (editingGroupId === deleteGroupId) resetGroupForm();
         if (editingGroupId === deleteGroupId) closeEditGroupModal();
         await render();
+      }
+
+      if (viewLeadsId && groupId) {
+        await showLeadDetails(groupId, viewLeadsId);
       }
 
       if (editLinkId && groupId) {
