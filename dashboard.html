@@ -87,6 +87,42 @@
       box-shadow: 0 0 0 4px rgba(18, 140, 126, 0.13);
     }
 
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 48px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      display: inline-grid;
+      place-items: center;
+      color: var(--muted);
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+    }
+
+    .icon-btn:hover {
+      color: var(--ink);
+      background: rgba(36, 31, 26, 0.07);
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
     .topbar {
       display: flex;
       justify-content: space-between;
@@ -282,7 +318,17 @@
       <p>Entre para criar grupos e links de redirecionamento com Pixel, CAPI e mensagens personalizadas.</p>
       <div class="form-grid" style="margin-top: 22px;">
         <label>E-mail <input id="loginEmail" type="email" autocomplete="email" required></label>
-        <label>Senha <input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <label>Senha
+          <span class="password-wrap">
+            <input id="loginPassword" type="password" autocomplete="current-password" required>
+            <button class="icon-btn password-toggle" type="button" id="togglePasswordBtn" aria-label="Mostrar senha" title="Mostrar senha">
+              <svg id="passwordEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </span>
+        </label>
       </div>
       <div class="actions"><button class="btn" type="submit">Entrar</button></div>
       <p class="error" id="loginError"></p>
@@ -402,6 +448,9 @@
     const appScreen = document.getElementById('appScreen');
     const loginForm = document.getElementById('loginForm');
     const loginError = document.getElementById('loginError');
+    const loginPassword = document.getElementById('loginPassword');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordEyeIcon = document.getElementById('passwordEyeIcon');
     const logoutBtn = document.getElementById('logoutBtn');
     const groupForm = document.getElementById('groupForm');
     const editGroupModal = document.getElementById('editGroupModal');
@@ -1036,6 +1085,16 @@
       }
 
       loginError.textContent = 'E-mail ou senha inválidos.';
+    });
+
+    togglePasswordBtn.addEventListener('click', () => {
+      const shouldShow = loginPassword.type === 'password';
+      loginPassword.type = shouldShow ? 'text' : 'password';
+      togglePasswordBtn.setAttribute('aria-label', shouldShow ? 'Ocultar senha' : 'Mostrar senha');
+      togglePasswordBtn.setAttribute('title', shouldShow ? 'Ocultar senha' : 'Mostrar senha');
+      passwordEyeIcon.innerHTML = shouldShow
+        ? '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5.5 20 2 12 2 12a20.28 20.28 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A10.45 10.45 0 0 1 12 4c6.5 0 10 8 10 8a20.06 20.06 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 0 1-4.24-4.24"></path><path d="M2 2l20 20"></path>'
+        : '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>';
     });
 
     logoutBtn.addEventListener('click', () => {
