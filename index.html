@@ -252,19 +252,35 @@
     .lead-filter label { min-width: min(100%, 210px); }
     .lead-item {
       display: grid;
-      gap: 7px;
+      gap: 10px;
       padding: 12px;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 8px;
     }
     .lead-item strong { font-size: 0.96rem; }
-    .lead-item code {
+    .lead-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .lead-detail {
+      padding: 9px;
+      background: rgba(245, 240, 232, 0.62);
+      border-radius: 8px;
+    }
+    .lead-detail span {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .lead-detail strong {
       display: block;
       overflow-wrap: anywhere;
-      color: var(--muted);
-      font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
+      line-height: 1.35;
     }
     .hidden { display: none !important; }
 
@@ -656,7 +672,7 @@
 
       const dateRange = getDateRange(dateValue);
       const filters = [
-        '/rest/v1/redirect_events?select=event_name,event_id,campaign_name,event_source_url,user_agent,created_at',
+        '/rest/v1/redirect_events?select=event_name,event_id,campaign_name,event_source_url,user_agent,payload,created_at',
         `group_slug=eq.${encodeURIComponent(groupId)}`,
         `link_slug=eq.${encodeURIComponent(linkId)}`,
         'event_name=eq.Lead',
@@ -997,6 +1013,14 @@
       }).format(new Date(value));
     }
 
+    function formatTime(value) {
+      if (!value) return 'Horario indisponivel';
+      return new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(value));
+    }
+
     function formatDateLabel(dateValue) {
       if (!dateValue) return '';
       const [year, month, day] = dateValue.split('-').map(Number);
@@ -1004,6 +1028,53 @@
       return new Intl.DateTimeFormat('pt-BR', {
         dateStyle: 'short'
       }).format(new Date(year, month - 1, day));
+    }
+
+    function getBrowserLabel(userAgent = '') {
+      if (/Edg\//.test(userAgent)) return 'Microsoft Edge';
+      if (/OPR\//.test(userAgent)) return 'Opera';
+      if (/Chrome\//.test(userAgent) && !/Chromium/.test(userAgent)) return 'Google Chrome';
+      if (/Safari\//.test(userAgent) && !/Chrome\//.test(userAgent)) return 'Safari';
+      if (/Firefox\//.test(userAgent)) return 'Firefox';
+      return 'Navegador nao identificado';
+    }
+
+    function getDeviceLabel(userAgent = '') {
+      const os = /Android/.test(userAgent)
+        ? 'Android'
+        : /iPhone|iPad|iPod/.test(userAgent)
+          ? 'iOS'
+          : /Windows/.test(userAgent)
+            ? 'Windows'
+            : /Mac OS X/.test(userAgent)
+              ? 'macOS'
+              : /Linux/.test(userAgent)
+                ? 'Linux'
+                : 'Sistema nao identificado';
+      const type = /Mobile|iPhone|Android/.test(userAgent)
+        ? 'Celular'
+        : /iPad|Tablet/.test(userAgent)
+          ? 'Tablet'
+          : 'Computador';
+      return `${type} - ${os}`;
+    }
+
+    function getCityLabel(payload = {}) {
+      const geo = payload && payload.geo ? payload.geo : {};
+      const city = geo.city || '';
+      const region = geo.region || '';
+      const country = geo.country || '';
+      const parts = [city, region, country].filter(Boolean);
+      return parts.length ? parts.join(', ') : 'Cidade nao disponivel';
+    }
+
+    function getTrackingLabel(payload = {}) {
+      const tracking = payload && payload.tracking ? payload.tracking : {};
+      if (tracking.pixel && tracking.capi) return 'Pixel + CAPI';
+      if (tracking.capi) return 'Somente CAPI';
+      if (tracking.pixel) return 'Somente Pixel';
+      if (tracking.capi_status) return `CAPI: ${tracking.capi_status}`;
+      return 'Pixel';
     }
 
     function renderLeadItems(leads) {
@@ -1015,13 +1086,32 @@
       leadList.innerHTML = leads.map((lead, index) => `
         <article class="lead-item">
           <strong>Lead #${leads.length - index}</strong>
-          <div class="meta">
-            <span>${escapeHtml(formatDateTime(lead.created_at))}</span>
-            <span>${escapeHtml(lead.campaign_name || 'Campanha sem nome')}</span>
-            <span>${escapeHtml(lead.event_name || 'Lead')}</span>
+          <div class="lead-detail-grid">
+            <div class="lead-detail">
+              <span>Horario</span>
+              <strong>${escapeHtml(formatDateTime(lead.created_at))}</strong>
+            </div>
+            <div class="lead-detail">
+              <span>Campanha</span>
+              <strong>${escapeHtml(lead.campaign_name || 'Campanha sem nome')}</strong>
+            </div>
+            <div class="lead-detail">
+              <span>Aparelho</span>
+              <strong>${escapeHtml(getDeviceLabel(lead.user_agent))}</strong>
+            </div>
+            <div class="lead-detail">
+              <span>Navegador</span>
+              <strong>${escapeHtml(getBrowserLabel(lead.user_agent))}</strong>
+            </div>
+            <div class="lead-detail">
+              <span>Cidade</span>
+              <strong>${escapeHtml(getCityLabel(lead.payload))}</strong>
+            </div>
+            <div class="lead-detail">
+              <span>Rastreamento</span>
+              <strong>${escapeHtml(getTrackingLabel(lead.payload))}</strong>
+            </div>
           </div>
-          <code>${escapeHtml(lead.event_source_url || 'URL nao registrada')}</code>
-          <code>${escapeHtml(lead.user_agent || 'Dispositivo nao registrado')}</code>
         </article>
       `).join('');
     }

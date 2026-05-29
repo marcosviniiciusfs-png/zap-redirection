@@ -37,7 +37,11 @@
       group_id: GROUP_ID,
       group_name: GROUP_NAME,
       campaign_name: CAMPAIGN_NAME,
-      link_id: LINK_ID
+      link_id: LINK_ID,
+      tracking: {
+        pixel: ACTIVE_PIXEL_ID && ACTIVE_PIXEL_ID !== 'SEU_PIXEL_ID',
+        capi: false
+      }
     };
 
     function getCookie(name) {
@@ -378,10 +382,10 @@
 
     function recordRedirectEvent(eventName, eventId) {
       if (!OWNER_USER_ID) {
-        return;
+        return Promise.resolve();
       }
 
-      fetch(`${SUPABASE_URL}/rest/v1/rpc/log_redirect_event`, {
+      return fetch(`${SUPABASE_URL}/rest/v1/rpc/log_redirect_event`, {
         method: 'POST',
         body: JSON.stringify({
           p_user_id: OWNER_USER_ID,
@@ -393,7 +397,11 @@
           p_campaign_name: CAMPAIGN_NAME,
           p_event_source_url: window.location.href,
           p_user_agent: navigator.userAgent,
-          p_payload: pixelData
+          p_payload: {
+            ...pixelData,
+            fbp: getCookie('_fbp'),
+            fbc: getCookie('_fbc')
+          }
         }),
         keepalive: true,
         headers: {
@@ -408,8 +416,8 @@
       window.setTimeout(() => updateProgress(state), state.delay);
     });
 
-    sendCapiEvent('Lead', LEAD_EVENT_ID);
-    recordRedirectEvent('Lead', LEAD_EVENT_ID);
+    recordRedirectEvent('Lead', LEAD_EVENT_ID)
+      .finally(() => sendCapiEvent('Lead', LEAD_EVENT_ID));
 
     window.setTimeout(() => {
       if (window.fbq) {

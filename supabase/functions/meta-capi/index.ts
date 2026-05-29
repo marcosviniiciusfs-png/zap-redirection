@@ -33,6 +33,21 @@ function getClientIp(request: Request) {
   return forwardedFor.split(",")[0]?.trim() || request.headers.get("cf-connecting-ip") || "";
 }
 
+function getGeo(request: Request) {
+  return {
+    city: request.headers.get("cf-ipcity") ||
+      request.headers.get("x-vercel-ip-city") ||
+      request.headers.get("x-appengine-city") ||
+      "",
+    region: request.headers.get("cf-region") ||
+      request.headers.get("x-vercel-ip-country-region") ||
+      "",
+    country: request.headers.get("cf-ipcountry") ||
+      request.headers.get("x-vercel-ip-country") ||
+      "",
+  };
+}
+
 async function supabaseGet(path: string) {
   const supabaseUrl = requiredEnv("SUPABASE_URL");
   const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -48,6 +63,60 @@ async function supabaseGet(path: string) {
   }
 
   return response.json();
+}
+
+async function supabasePatch(path: string, body: unknown) {
+  const supabaseUrl = requiredEnv("SUPABASE_URL");
+  const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    method: "PATCH",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+}
+
+async function updateRedirectEvent(payload: Record<string, unknown>, status: string, metaBody: unknown, request: Request) {
+  const eventId = String(payload.event_id || "");
+  const userId = String(payload.user_id || "");
+  if (!eventId || !userId) {
+    return;
+  }
+
+  await supabasePatch(
+    [
+      "redirect_events",
+      `?user_id=eq.${encodeURIComponent(userId)}`,
+      `&event_id=eq.${encodeURIComponent(eventId)}`,
+    ].join(""),
+    {
+      payload: {
+        content_name: String(payload.project_name || payload.campaign_name || ""),
+        content_category: String(payload.content_category || "whatsapp_redirect"),
+        group_id: String(payload.group_id || ""),
+        group_name: String(payload.group_name || ""),
+        campaign_name: String(payload.campaign_name || ""),
+        link_id: String(payload.link_id || ""),
+        fbp: payload.fbp || "",
+        fbc: payload.fbc || "",
+        geo: getGeo(request),
+        tracking: {
+          pixel: Boolean(payload.pixel_id),
+          capi: status === "sent",
+          capi_status: status,
+        },
+        meta: metaBody,
+      },
+    },
+  );
 }
 
 async function findGroup(userId: string, groupSlug: string): Promise<RedirectGroup | null> {
@@ -102,15 +171,18 @@ Deno.serve(async (request) => {
 
     const group = await findGroup(userId, groupSlug);
     if (!group || !(await hasLink(group.id, linkSlug))) {
+      await updateRedirectEvent(payload, "unknown_link", null, request).catch(() => {});
       return jsonResponse({ ok: true, skipped: "unknown_link" });
     }
 
     if (!group.capi_access_token) {
+      await updateRedirectEvent(payload, "missing_capi_token", null, request).catch(() => {});
       return jsonResponse({ ok: true, skipped: "missing_capi_token" });
     }
 
     const pixelId = String(payload.pixel_id || group.pixel_id || "");
     if (!pixelId) {
+      await updateRedirectEvent(payload, "missing_pixel_id", null, request).catch(() => {});
       return jsonResponse({ ok: true, skipped: "missing_pixel_id" });
     }
 
@@ -146,9 +218,11 @@ Deno.serve(async (request) => {
 
     const metaBody = await metaResponse.json().catch(() => ({}));
     if (!metaResponse.ok) {
+      await updateRedirectEvent(payload, "failed", metaBody, request).catch(() => {});
       return jsonResponse({ ok: false, meta: metaBody }, 502);
     }
 
+    await updateRedirectEvent(payload, "sent", metaBody, request).catch(() => {});
     return jsonResponse({ ok: true, meta: metaBody });
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : "Unexpected error" }, 500);
