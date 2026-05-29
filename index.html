@@ -370,7 +370,7 @@
     <header class="topbar">
       <div>
         <h1>Grupos de WhatsApp</h1>
-        <p>Crie um grupo por cliente, nÃºmero ou Pixel. Dentro de cada grupo, crie vÃ¡rios links com mensagens diferentes para campanhas e anÃºncios.</p>
+        <p>Crie um grupo por cliente, número ou Pixel. Dentro de cada grupo, crie vários links com mensagens diferentes para campanhas e anúncios.</p>
       </div>
       <button class="btn secondary" type="button" id="logoutBtn">Sair</button>
     </header>
@@ -378,12 +378,11 @@
     <div class="metrics">
       <div class="metric"><strong id="totalGroups">0</strong><span>Grupos ativos no dashboard.</span></div>
       <div class="metric"><strong id="totalLinks">0</strong><span>Links de campanha ativos.</span></div>
-      <div class="metric"><strong id="totalLeads">0</strong><span>Leads capturados pelos links.</span></div>
       <div class="metric"><strong id="trackedLinks">0</strong><span>Links com Pixel e CAPI configurados.</span></div>
     </div>
 
     <div class="notice">
-      Melhor prÃ¡tica: crie uma conversÃ£o personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vÃ¡rios links do mesmo nÃºmero/cliente usam a mesma conversÃ£o, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
+      Melhor prática: crie uma conversão personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vários links do mesmo número/cliente usam a mesma conversão, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
     </div>
 
     <div class="grid">
@@ -392,9 +391,9 @@
           <h2 id="groupFormTitle">Novo grupo</h2>
           <div class="form-grid">
             <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
-            <label>NÃºmero do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
+            <label>Número do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
             <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
-            <label>Token da API de ConversÃµes <input id="groupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
+            <label>Token da API de Conversões <input id="groupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
           </div>
           <div class="actions">
             <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
@@ -405,13 +404,13 @@
 
         <section class="panel">
           <h2>Links</h2>
-          <p>Use o botÃ£o Adicionar link dentro de cada grupo para criar mensagens especÃ­ficas por campanha.</p>
+          <p>Use o botão Adicionar link dentro de cada grupo para criar mensagens específicas por campanha.</p>
         </section>
       </div>
 
       <section class="panel">
         <h2>Grupos</h2>
-        <p>Clique em um grupo para abrir a seÃƒÂ§ÃƒÂ£o com os links e as mÃƒÂ©tricas desse cliente.</p>
+        <p>Clique em um grupo para abrir a seção com os links e as métricas desse cliente.</p>
         <div class="groups" id="groupsList"></div>
       </section>
 
@@ -433,9 +432,9 @@
       <h2 id="editGroupTitle">Editar grupo</h2>
       <div class="form-grid">
         <label>Nome do grupo <input id="editGroupName" required></label>
-        <label>NÃºmero do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
+        <label>Número do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
         <label>Pixel ID <input id="editGroupPixel" placeholder="Pixel usado neste grupo"></label>
-        <label>Token da API de ConversÃµes <input id="editGroupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
+        <label>Token da API de Conversões <input id="editGroupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
       </div>
       <div class="actions">
         <button class="btn" type="submit">Salvar grupo</button>
@@ -451,7 +450,7 @@
       <div class="form-grid">
         <label>Grupo <select id="linkGroup" required></select></label>
         <label>Nome da campanha/link <input id="linkName" type="text" autocomplete="off" placeholder="Ex: Botox - Story 01" required></label>
-        <label>Mensagem personalizada <textarea id="linkMessage" required>OlÃ¡! Vim pelo anÃºncio e quero saber mais.</textarea></label>
+        <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
       </div>
       <div class="actions">
         <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
@@ -522,7 +521,6 @@
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
-    const totalLeads = document.getElementById('totalLeads');
     const trackedLinks = document.getElementById('trackedLinks');
     const groupFormTitle = document.getElementById('groupFormTitle');
     const linkFormTitle = document.getElementById('linkFormTitle');
@@ -935,7 +933,7 @@
     function resetLinkForm() {
       editingLinkId = null;
       linkForm.reset();
-      document.getElementById('linkMessage').value = 'OlÃ¡! Vim pelo anÃºncio e quero saber mais.';
+      document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
       linkFormTitle.textContent = 'Novo link';
       linkSubmitBtn.textContent = 'Criar link';
       linkStatus.textContent = '';
@@ -967,10 +965,8 @@
         const hasFullTracking = Boolean(group.pixelId && group.capiToken);
         return total + (hasFullTracking ? (group.links || []).length : 0);
       }, 0);
-      const leadCount = [...leadCounts.values()].reduce((total, count) => total + count, 0);
       totalGroups.textContent = groups.length;
       totalLinks.textContent = linkCount;
-      totalLeads.textContent = leadCount;
       trackedLinks.textContent = trackedLinkCount;
       renderSelect(groups);
 
@@ -990,7 +986,6 @@
 
       groupsList.innerHTML = groups.map((group) => {
         const links = group.links || [];
-        const groupLeadCount = links.reduce((total, link) => total + (leadCounts.get(`${group.id}::${link.id}`) || 0), 0);
 
         return `
           <article class="group-card clickable ${group.id === activeGroupId ? 'selected' : ''}" data-open-group="${escapeHtml(group.id)}" tabindex="0" role="button" aria-label="Abrir links do grupo ${escapeHtml(group.name)}">
@@ -999,7 +994,6 @@
                 <h3>${escapeHtml(group.name)}</h3>
                 <div class="meta">
                   <span>${links.length} link(s)</span>
-                  <span>${groupLeadCount} lead(s)</span>
                 </div>
               </div>
               <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiToken ? ' + CAPI' : ''}</span>
@@ -1293,12 +1287,12 @@
 
       if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         sessionStorage.setItem(SESSION_KEY, 'true');
-        loginError.textContent = 'Entrando em modo local. Crie o usuÃ¡rio no Supabase Auth para sincronizar no banco.';
+        loginError.textContent = 'Entrando em modo local. Crie o usuário no Supabase Auth para sincronizar no banco.';
         await showApp();
         return;
       }
 
-      loginError.textContent = 'E-mail ou senha invÃ¡lidos.';
+      loginError.textContent = 'E-mail ou senha inválidos.';
     });
 
     togglePasswordBtn.addEventListener('click', () => {
@@ -1327,7 +1321,7 @@
       const capiToken = document.getElementById('groupCapi').value.trim();
 
       if (!name || !number) {
-        groupStatus.textContent = 'Informe o nome do grupo e o nÃºmero do WhatsApp.';
+        groupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
         return;
       }
 
