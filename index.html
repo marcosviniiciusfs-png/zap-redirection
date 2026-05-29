@@ -439,7 +439,8 @@
       <h2 id="leadModalTitle">Leads do link</h2>
       <p id="leadModalSummary">Carregando...</p>
       <div class="lead-filter">
-        <label>Filtrar por dia <input id="leadDateFilter" type="date"></label>
+        <label>Data inicial <input id="leadStartDateFilter" type="date"></label>
+        <label>Data final <input id="leadEndDateFilter" type="date"></label>
         <button class="btn" type="button" id="applyLeadFilterBtn">Aplicar</button>
         <button class="btn secondary" type="button" id="clearLeadFilterBtn">Limpar filtro</button>
       </div>
@@ -481,7 +482,8 @@
     const leadModalTitle = document.getElementById('leadModalTitle');
     const leadModalSummary = document.getElementById('leadModalSummary');
     const leadList = document.getElementById('leadList');
-    const leadDateFilter = document.getElementById('leadDateFilter');
+    const leadStartDateFilter = document.getElementById('leadStartDateFilter');
+    const leadEndDateFilter = document.getElementById('leadEndDateFilter');
     const applyLeadFilterBtn = document.getElementById('applyLeadFilterBtn');
     const clearLeadFilterBtn = document.getElementById('clearLeadFilterBtn');
     const groupsList = document.getElementById('groupsList');
@@ -647,7 +649,7 @@
       }
     }
 
-    function getDateRange(dateValue) {
+    function parseLocalDate(dateValue) {
       if (!dateValue) {
         return null;
       }
@@ -657,20 +659,33 @@
         return null;
       }
 
-      const start = new Date(year, month - 1, day);
-      const end = new Date(year, month - 1, day + 1);
+      return new Date(year, month - 1, day);
+    }
+
+    function getDateRange(startDateValue = '', endDateValue = '') {
+      const startDate = parseLocalDate(startDateValue);
+      const endDate = parseLocalDate(endDateValue);
+
+      if (!startDate && !endDate) {
+        return null;
+      }
+
+      const start = startDate || endDate;
+      const endBase = endDate || startDate;
+      const end = new Date(endBase.getFullYear(), endBase.getMonth(), endBase.getDate() + 1);
+
       return {
         start: start.toISOString(),
         end: end.toISOString()
       };
     }
 
-    async function getLeadEvents(groupId, linkId, dateValue = '') {
+    async function getLeadEvents(groupId, linkId, startDateValue = '', endDateValue = '') {
       if (!isSupabaseActive()) {
         return [];
       }
 
-      const dateRange = getDateRange(dateValue);
+      const dateRange = getDateRange(startDateValue, endDateValue);
       const filters = [
         '/rest/v1/redirect_events?select=event_name,event_id,campaign_name,event_source_url,user_agent,payload,created_at',
         `group_slug=eq.${encodeURIComponent(groupId)}`,
@@ -1023,11 +1038,27 @@
 
     function formatDateLabel(dateValue) {
       if (!dateValue) return '';
-      const [year, month, day] = dateValue.split('-').map(Number);
-      if (!year || !month || !day) return dateValue;
+      const parsed = parseLocalDate(dateValue);
+      if (!parsed) return dateValue;
       return new Intl.DateTimeFormat('pt-BR', {
         dateStyle: 'short'
-      }).format(new Date(year, month - 1, day));
+      }).format(parsed);
+    }
+
+    function formatPeriodLabel(startDateValue = '', endDateValue = '') {
+      if (startDateValue && endDateValue) {
+        return ` de ${formatDateLabel(startDateValue)} ate ${formatDateLabel(endDateValue)}`;
+      }
+
+      if (startDateValue) {
+        return ` a partir de ${formatDateLabel(startDateValue)}`;
+      }
+
+      if (endDateValue) {
+        return ` ate ${formatDateLabel(endDateValue)}`;
+      }
+
+      return '';
     }
 
     function getBrowserLabel(userAgent = '') {
@@ -1120,11 +1151,12 @@
       leadModal.classList.add('hidden');
       leadList.innerHTML = '';
       leadModalSummary.textContent = '';
-      leadDateFilter.value = '';
+      leadStartDateFilter.value = '';
+      leadEndDateFilter.value = '';
       currentLeadContext = null;
     }
 
-    async function showLeadDetails(groupId, linkId, dateValue = '') {
+    async function showLeadDetails(groupId, linkId, startDateValue = '', endDateValue = '') {
       const groups = await getAllGroups();
       const group = groups.find((item) => item.id === groupId);
       const link = group && (group.links || []).find((item) => item.id === linkId);
@@ -1132,17 +1164,19 @@
       currentLeadContext = { groupId, linkId };
       leadModalTitle.textContent = link ? `Leads: ${link.name}` : 'Leads do link';
       leadModalSummary.textContent = 'Carregando registros deste link...';
-      leadDateFilter.value = dateValue;
+      leadStartDateFilter.value = startDateValue;
+      leadEndDateFilter.value = endDateValue;
       leadList.innerHTML = '';
       leadModal.classList.remove('hidden');
 
       try {
+        const hasFilter = Boolean(startDateValue || endDateValue);
         const [allLeads, filteredLeads] = await Promise.all([
           getLeadEvents(groupId, linkId),
-          dateValue ? getLeadEvents(groupId, linkId, dateValue) : Promise.resolve(null)
+          hasFilter ? getLeadEvents(groupId, linkId, startDateValue, endDateValue) : Promise.resolve(null)
         ]);
         const visibleLeads = filteredLeads || allLeads;
-        const dateText = dateValue ? ` em ${formatDateLabel(dateValue)}` : '';
+        const dateText = hasFilter ? formatPeriodLabel(startDateValue, endDateValue) : '';
         leadModalSummary.textContent = `${allLeads.length} lead(s) no total. ${visibleLeads.length} lead(s)${dateText}.`;
         renderLeadItems(visibleLeads);
       } catch (error) {
@@ -1362,11 +1396,12 @@
     closeLeadBtn.addEventListener('click', closeLeadModal);
     applyLeadFilterBtn.addEventListener('click', async () => {
       if (!currentLeadContext) return;
-      await showLeadDetails(currentLeadContext.groupId, currentLeadContext.linkId, leadDateFilter.value);
+      await showLeadDetails(currentLeadContext.groupId, currentLeadContext.linkId, leadStartDateFilter.value, leadEndDateFilter.value);
     });
     clearLeadFilterBtn.addEventListener('click', async () => {
       if (!currentLeadContext) return;
-      leadDateFilter.value = '';
+      leadStartDateFilter.value = '';
+      leadEndDateFilter.value = '';
       await showLeadDetails(currentLeadContext.groupId, currentLeadContext.linkId);
     });
     leadModal.addEventListener('click', (event) => {
