@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -191,7 +191,7 @@
 
     .error { min-height: 22px; margin-top: 12px; color: var(--danger); font-size: 0.9rem; font-weight: 700; }
     .status-line { min-height: 22px; margin-top: 12px; color: var(--green-dark); font-size: 0.9rem; font-weight: 700; }
-    .groups { display: grid; gap: 14px; }
+    .groups { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .empty { padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 8px; }
 
     .group-card {
@@ -201,6 +201,18 @@
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 8px;
+    }
+
+    .group-card.clickable {
+      cursor: pointer;
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .group-card.clickable:hover,
+    .group-card.selected {
+      border-color: rgba(20, 150, 135, 0.45);
+      box-shadow: 0 14px 28px rgba(20, 150, 135, 0.12);
+      transform: translateY(-1px);
     }
 
     .group-head, .link-head {
@@ -241,6 +253,7 @@
     }
 
     .link-list { display: grid; gap: 10px; }
+    .selected-group-panel { margin-top: 18px; }
     .url-box { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
     .url-box input { font-size: 0.86rem; }
     .lead-list { display: grid; gap: 10px; max-height: min(62vh, 520px); overflow: auto; margin-top: 16px; }
@@ -357,7 +370,7 @@
     <header class="topbar">
       <div>
         <h1>Grupos de WhatsApp</h1>
-        <p>Crie um grupo por cliente, número ou Pixel. Dentro de cada grupo, crie vários links com mensagens diferentes para campanhas e anúncios.</p>
+        <p>Crie um grupo por cliente, nÃºmero ou Pixel. Dentro de cada grupo, crie vÃ¡rios links com mensagens diferentes para campanhas e anÃºncios.</p>
       </div>
       <button class="btn secondary" type="button" id="logoutBtn">Sair</button>
     </header>
@@ -370,7 +383,7 @@
     </div>
 
     <div class="notice">
-      Melhor prática: crie uma conversão personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vários links do mesmo número/cliente usam a mesma conversão, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
+      Melhor prÃ¡tica: crie uma conversÃ£o personalizada por grupo, usando evento <strong>Lead</strong> ou <strong>Contact</strong> e regra de URL contendo <strong>gid=nome-do-grupo</strong>. Assim vÃ¡rios links do mesmo nÃºmero/cliente usam a mesma conversÃ£o, mas continuam separados por <strong>lid</strong> e <strong>campaign_name</strong>.
     </div>
 
     <div class="grid">
@@ -379,9 +392,9 @@
           <h2 id="groupFormTitle">Novo grupo</h2>
           <div class="form-grid">
             <label>Nome do grupo <input id="groupName" placeholder="Nome do cliente ou projeto" required></label>
-            <label>Número do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
+            <label>NÃºmero do WhatsApp <input id="groupNumber" type="tel" inputmode="tel" autocomplete="tel" placeholder="5594991031837" required></label>
             <label>Pixel ID <input id="groupPixel" placeholder="Pixel usado neste grupo"></label>
-            <label>Token da API de Conversões <input id="groupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
+            <label>Token da API de ConversÃµes <input id="groupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
           </div>
           <div class="actions">
             <button class="btn" type="submit" id="groupSubmitBtn">Criar grupo</button>
@@ -392,13 +405,25 @@
 
         <section class="panel">
           <h2>Links</h2>
-          <p>Use o botão Adicionar link dentro de cada grupo para criar mensagens específicas por campanha.</p>
+          <p>Use o botÃ£o Adicionar link dentro de cada grupo para criar mensagens especÃ­ficas por campanha.</p>
         </section>
       </div>
 
       <section class="panel">
-        <h2>Grupos e links</h2>
+        <h2>Grupos</h2>
+        <p>Clique em um grupo para abrir a seÃƒÂ§ÃƒÂ£o com os links e as mÃƒÂ©tricas desse cliente.</p>
         <div class="groups" id="groupsList"></div>
+      </section>
+
+      <section class="panel selected-group-panel hidden" id="selectedGroupSection">
+        <div class="group-head">
+          <div>
+            <h2 id="selectedGroupTitle">Links do grupo</h2>
+            <div class="meta" id="selectedGroupMeta"></div>
+          </div>
+          <button class="btn" type="button" id="selectedAddLinkBtn">Adicionar link</button>
+        </div>
+        <div class="link-list" id="selectedGroupLinks"></div>
       </section>
     </div>
   </section>
@@ -408,9 +433,9 @@
       <h2 id="editGroupTitle">Editar grupo</h2>
       <div class="form-grid">
         <label>Nome do grupo <input id="editGroupName" required></label>
-        <label>Número do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
+        <label>NÃºmero do WhatsApp <input id="editGroupNumber" type="tel" inputmode="tel" autocomplete="tel" required></label>
         <label>Pixel ID <input id="editGroupPixel" placeholder="Pixel usado neste grupo"></label>
-        <label>Token da API de Conversões <input id="editGroupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
+        <label>Token da API de ConversÃµes <input id="editGroupCapi" type="password" autocomplete="off" placeholder="Cole o token CAPI deste Pixel"></label>
       </div>
       <div class="actions">
         <button class="btn" type="submit">Salvar grupo</button>
@@ -426,7 +451,7 @@
       <div class="form-grid">
         <label>Grupo <select id="linkGroup" required></select></label>
         <label>Nome da campanha/link <input id="linkName" type="text" autocomplete="off" placeholder="Ex: Botox - Story 01" required></label>
-        <label>Mensagem personalizada <textarea id="linkMessage" required>Olá! Vim pelo anúncio e quero saber mais.</textarea></label>
+        <label>Mensagem personalizada <textarea id="linkMessage" required>OlÃ¡! Vim pelo anÃºncio e quero saber mais.</textarea></label>
       </div>
       <div class="actions">
         <button class="btn" type="submit" id="linkSubmitBtn">Criar link</button>
@@ -489,6 +514,11 @@
     const applyLeadFilterBtn = document.getElementById('applyLeadFilterBtn');
     const clearLeadFilterBtn = document.getElementById('clearLeadFilterBtn');
     const groupsList = document.getElementById('groupsList');
+    const selectedGroupSection = document.getElementById('selectedGroupSection');
+    const selectedGroupTitle = document.getElementById('selectedGroupTitle');
+    const selectedGroupMeta = document.getElementById('selectedGroupMeta');
+    const selectedGroupLinks = document.getElementById('selectedGroupLinks');
+    const selectedAddLinkBtn = document.getElementById('selectedAddLinkBtn');
     const linkGroup = document.getElementById('linkGroup');
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
@@ -505,6 +535,7 @@
     let editingGroupId = null;
     let editingGroupDbId = null;
     let editingLinkId = null;
+    let activeGroupId = null;
     let currentLeadContext = null;
     let supabaseSession = readJson(SUPABASE_SESSION_KEY) || null;
     let dataMode = 'Local';
@@ -876,7 +907,7 @@
     function resetLinkForm() {
       editingLinkId = null;
       linkForm.reset();
-      document.getElementById('linkMessage').value = 'Olá! Vim pelo anúncio e quero saber mais.';
+      document.getElementById('linkMessage').value = 'OlÃ¡! Vim pelo anÃºncio e quero saber mais.';
       linkFormTitle.textContent = 'Novo link';
       linkSubmitBtn.textContent = 'Criar link';
       linkStatus.textContent = '';
@@ -917,66 +948,88 @@
 
       if (!groups.length) {
         groupsList.innerHTML = '<div class="empty"><p>Nenhum grupo criado ainda.</p></div>';
+        selectedGroupSection.classList.add('hidden');
+        selectedGroupLinks.innerHTML = '';
         return;
+      }
+
+      if (activeGroupId && !groups.some((group) => group.id === activeGroupId)) {
+        activeGroupId = null;
       }
 
       groupsList.innerHTML = groups.map((group) => {
         const links = group.links || [];
-        const linkHtml = links.length ? links.map((link) => {
-          const url = buildLink(group, link);
-          const safeUrl = escapeHtml(url);
-          const linkLeadCount = leadCounts.get(`${group.id}::${link.id}`) || 0;
-          return `
-            <article class="link-row">
-              <div class="link-head">
-                <div>
-                  <h3>${escapeHtml(link.name)}</h3>
-                  <div class="meta">
-                    <span>lid=${escapeHtml(link.id)}</span>
-                    <span>gid=${escapeHtml(group.id)}</span>
-                  </div>
-                </div>
-                <span class="pill">${linkLeadCount} lead(s)</span>
-              </div>
-              <div class="url-box">
-                <input readonly value="${safeUrl}">
-                <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
-              </div>
-              <p>${escapeHtml(link.message)}</p>
-              <div class="actions" style="margin-top: 0;">
-                <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
-                <button class="btn secondary" type="button" data-view-leads="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Ver leads</button>
-                <button class="btn secondary" type="button" data-edit-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Editar</button>
-                <button class="btn danger" type="button" data-delete-link="${escapeHtml(link.id)}" data-group="${escapeHtml(group.id)}">Excluir</button>
-              </div>
-            </article>
-          `;
-        }).join('') : '<div class="empty"><p>Nenhum link neste grupo ainda.</p></div>';
+        const groupLeadCount = links.reduce((total, link) => total + (leadCounts.get(`${group.id}::${link.id}`) || 0), 0);
 
         return `
-          <article class="group-card">
+          <article class="group-card clickable ${group.id === activeGroupId ? 'selected' : ''}" data-open-group="${escapeHtml(group.id)}" tabindex="0" role="button" aria-label="Abrir links do grupo ${escapeHtml(group.name)}">
             <div class="group-head">
               <div>
                 <h3>${escapeHtml(group.name)}</h3>
                 <div class="meta">
-                  <span>${escapeHtml(group.number)}</span>
-                  <span>gid=${escapeHtml(group.id)}</span>
                   <span>${links.length} link(s)</span>
+                  <span>${groupLeadCount} lead(s)</span>
                 </div>
               </div>
               <span class="pill">${group.pixelId ? 'Pixel próprio' : 'Pixel padrão'}${group.capiToken ? ' + CAPI' : ''}</span>
             </div>
             <div class="actions" style="margin-top: 0;">
+              <button class="btn secondary" type="button" data-open-group="${escapeHtml(group.id)}">Ver links</button>
               <button class="btn" type="button" data-add-link="${escapeHtml(group.id)}">Adicionar link</button>
               <button class="btn secondary" type="button" data-edit-group="${escapeHtml(group.id)}">Editar grupo</button>
               <button class="btn danger" type="button" data-delete-group="${escapeHtml(group.id)}">Excluir grupo</button>
             </div>
-            <div class="link-list">${linkHtml}</div>
           </article>
         `;
       }).join('');
-    }
 
+      const selectedGroup = groups.find((group) => group.id === activeGroupId);
+      if (!selectedGroup) {
+        selectedGroupSection.classList.add('hidden');
+        selectedGroupLinks.innerHTML = '';
+        return;
+      }
+
+      const selectedLinks = selectedGroup.links || [];
+      selectedGroupTitle.textContent = `Links: ${selectedGroup.name}`;
+      selectedGroupMeta.innerHTML = `
+        <span>${escapeHtml(selectedGroup.number)}</span>
+        <span>gid=${escapeHtml(selectedGroup.id)}</span>
+        <span>${selectedLinks.length} link(s)</span>
+      `;
+      selectedAddLinkBtn.setAttribute('data-add-link', selectedGroup.id);
+      selectedGroupLinks.innerHTML = selectedLinks.length ? selectedLinks.map((link) => {
+        const url = buildLink(selectedGroup, link);
+        const safeUrl = escapeHtml(url);
+        const linkLeadCount = leadCounts.get(`${selectedGroup.id}::${link.id}`) || 0;
+        return `
+          <article class="link-row">
+            <div class="link-head">
+              <div>
+                <h3>${escapeHtml(link.name)}</h3>
+                <div class="meta">
+                  <span>lid=${escapeHtml(link.id)}</span>
+                  <span>${linkLeadCount} lead(s)</span>
+                </div>
+              </div>
+              <button class="btn secondary" type="button" data-view-leads="${escapeHtml(link.id)}" data-group="${escapeHtml(selectedGroup.id)}">Ver métricas</button>
+            </div>
+            <div class="url-box">
+              <input readonly value="${safeUrl}">
+              <button class="btn" type="button" data-copy="${safeUrl}">Copiar</button>
+            </div>
+            <p>${escapeHtml(link.message)}</p>
+            <div class="actions" style="margin-top: 0;">
+              <a class="btn secondary" href="${safeUrl}" target="_blank" rel="noopener">Testar</a>
+              <button class="btn secondary" type="button" data-edit-link="${escapeHtml(link.id)}" data-group="${escapeHtml(selectedGroup.id)}">Editar</button>
+              <button class="btn danger" type="button" data-delete-link="${escapeHtml(link.id)}" data-group="${escapeHtml(selectedGroup.id)}">Excluir</button>
+            </div>
+          </article>
+        `;
+      }).join('') : '<div class="empty"><p>Nenhum link neste grupo ainda. Clique em Adicionar link para criar o primeiro.</p></div>';
+
+      selectedGroupSection.classList.remove('hidden');
+    }
     async function copyText(text, button) {
       await navigator.clipboard.writeText(text);
       const original = button.textContent;
@@ -1209,12 +1262,12 @@
 
       if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         sessionStorage.setItem(SESSION_KEY, 'true');
-        loginError.textContent = 'Entrando em modo local. Crie o usuário no Supabase Auth para sincronizar no banco.';
+        loginError.textContent = 'Entrando em modo local. Crie o usuÃ¡rio no Supabase Auth para sincronizar no banco.';
         await showApp();
         return;
       }
 
-      loginError.textContent = 'E-mail ou senha inválidos.';
+      loginError.textContent = 'E-mail ou senha invÃ¡lidos.';
     });
 
     togglePasswordBtn.addEventListener('click', () => {
@@ -1243,7 +1296,7 @@
       const capiToken = document.getElementById('groupCapi').value.trim();
 
       if (!name || !number) {
-        groupStatus.textContent = 'Informe o nome do grupo e o número do WhatsApp.';
+        groupStatus.textContent = 'Informe o nome do grupo e o nÃºmero do WhatsApp.';
         return;
       }
 
@@ -1259,6 +1312,7 @@
         }
 
         resetGroupForm();
+        activeGroupId = newGroup.id;
         await render();
       } catch (error) {
         groupStatus.textContent = getFriendlyError(error);
@@ -1330,6 +1384,7 @@
 
         resetLinkForm();
         closeLinkModal();
+        activeGroupId = groupId;
         await render();
         return;
       }
@@ -1379,6 +1434,7 @@
 
       saveGroups(nextGroups);
       closeLinkModal();
+      activeGroupId = groupId;
       await render();
     });
 
@@ -1416,13 +1472,14 @@
       }
     });
 
-    groupsList.addEventListener('click', async (event) => {
-      const action = event.target.closest('[data-copy], [data-edit-group], [data-add-link], [data-delete-group], [data-view-leads], [data-edit-link], [data-delete-link]');
-      if (!action || !groupsList.contains(action)) {
+    async function handleDashboardAction(event, container) {
+      const action = event.target.closest('[data-copy], [data-open-group], [data-edit-group], [data-add-link], [data-delete-group], [data-view-leads], [data-edit-link], [data-delete-link]');
+      if (!action || !container.contains(action)) {
         return;
       }
 
       const copyValue = action.getAttribute('data-copy');
+      const openGroupId = action.getAttribute('data-open-group');
       const editGroupId = action.getAttribute('data-edit-group');
       const addLinkGroupId = action.getAttribute('data-add-link');
       const deleteGroupId = action.getAttribute('data-delete-group');
@@ -1433,6 +1490,12 @@
 
       if (copyValue) copyText(copyValue, action);
 
+      if (openGroupId) {
+        activeGroupId = openGroupId;
+        await render();
+        selectedGroupSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
       if (editGroupId) {
         const group = (await getAllGroups()).find((item) => item.id === editGroupId);
         if (group) fillGroupForm(group);
@@ -1440,7 +1503,10 @@
 
       if (addLinkGroupId) {
         const group = (await getAllGroups()).find((item) => item.id === addLinkGroupId);
-        if (group) startLinkForGroup(group);
+        if (group) {
+          activeGroupId = group.id;
+          startLinkForGroup(group);
+        }
       }
 
       if (deleteGroupId) {
@@ -1466,6 +1532,7 @@
 
         if (editingGroupId === deleteGroupId) resetGroupForm();
         if (editingGroupId === deleteGroupId) closeEditGroupModal();
+        if (activeGroupId === deleteGroupId) activeGroupId = null;
         await render();
       }
 
@@ -1483,6 +1550,7 @@
         const groups = await getAllGroups();
         const group = groups.find((item) => item.id === groupId);
         const link = group && (group.links || []).find((item) => item.id === deleteLinkId);
+        if (!link) return;
 
         if (isSupabaseActive()) {
           await deleteSupabaseLink(link.dbId);
@@ -1496,8 +1564,17 @@
         if (editingLinkId === deleteLinkId) resetLinkForm();
         await render();
       }
-    });
+    }
 
+    groupsList.addEventListener('click', (event) => handleDashboardAction(event, groupsList));
+    selectedGroupSection.addEventListener('click', (event) => handleDashboardAction(event, selectedGroupSection));
+    groupsList.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const card = event.target.closest('[data-open-group]');
+      if (!card || !groupsList.contains(card)) return;
+      event.preventDefault();
+      card.click();
+    });
     if (sessionStorage.getItem(SESSION_KEY) === 'true') {
       showApp();
     }
