@@ -361,10 +361,10 @@
     </header>
 
     <div class="metrics">
-      <div class="metric"><strong id="totalGroups">0</strong><span>Grupos criados neste navegador.</span></div>
-      <div class="metric"><strong id="totalLinks">0</strong><span>Links e mensagens personalizados.</span></div>
-      <div class="metric"><strong id="totalLeads">0</strong><span>Leads registrados nos links.</span></div>
-      <div class="metric"><strong id="storageMode">Local</strong><span>Modo de armazenamento ativo.</span></div>
+      <div class="metric"><strong id="totalGroups">0</strong><span>Grupos ativos no dashboard.</span></div>
+      <div class="metric"><strong id="totalLinks">0</strong><span>Links de campanha ativos.</span></div>
+      <div class="metric"><strong id="totalLeads">0</strong><span>Leads capturados pelos links.</span></div>
+      <div class="metric"><strong id="trackedLinks">0</strong><span>Links com Pixel e CAPI configurados.</span></div>
     </div>
 
     <div class="notice">
@@ -491,7 +491,7 @@
     const totalGroups = document.getElementById('totalGroups');
     const totalLinks = document.getElementById('totalLinks');
     const totalLeads = document.getElementById('totalLeads');
-    const storageMode = document.getElementById('storageMode');
+    const trackedLinks = document.getElementById('trackedLinks');
     const groupFormTitle = document.getElementById('groupFormTitle');
     const linkFormTitle = document.getElementById('linkFormTitle');
     const groupStatus = document.getElementById('groupStatus');
@@ -902,11 +902,15 @@
       const groups = await getAllGroups();
       const leadCounts = await getLeadCounts();
       const linkCount = groups.reduce((total, group) => total + (group.links || []).length, 0);
+      const trackedLinkCount = groups.reduce((total, group) => {
+        const hasFullTracking = Boolean(group.pixelId && group.capiToken);
+        return total + (hasFullTracking ? (group.links || []).length : 0);
+      }, 0);
       const leadCount = [...leadCounts.values()].reduce((total, count) => total + count, 0);
       totalGroups.textContent = groups.length;
       totalLinks.textContent = linkCount;
       totalLeads.textContent = leadCount;
-      storageMode.textContent = dataMode;
+      trackedLinks.textContent = trackedLinkCount;
       renderSelect(groups);
 
       if (!groups.length) {
