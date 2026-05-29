@@ -585,6 +585,30 @@
       }
     }
 
+    async function refreshSupabaseSession() {
+      if (!supabaseSession || !supabaseSession.refresh_token) {
+        return null;
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: supabaseSession.refresh_token })
+      });
+
+      if (!response.ok) {
+        setSupabaseSession(null);
+        return null;
+      }
+
+      const session = await response.json();
+      setSupabaseSession(session);
+      return session;
+    }
+
     async function supabaseRequest(path, options = {}) {
       const headers = {
         apikey: SUPABASE_ANON_KEY,
@@ -600,6 +624,10 @@
       });
 
       if (!response.ok) {
+        if ((response.status === 401 || response.status === 403) && !options._retried && await refreshSupabaseSession()) {
+          return supabaseRequest(path, { ...options, _retried: true });
+        }
+
         throw new Error(await response.text());
       }
 
@@ -955,6 +983,9 @@
 
       if (activeGroupId && !groups.some((group) => group.id === activeGroupId)) {
         activeGroupId = null;
+      }
+      if (!activeGroupId) {
+        activeGroupId = groups[0].id;
       }
 
       groupsList.innerHTML = groups.map((group) => {
